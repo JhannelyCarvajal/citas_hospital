@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes - Hospital Citas</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <h1>Hospital Citas</h1>
+            <nav class="nav">
+                <a href="../index.html">Citas</a>
+                <a href="horarios.html">Horarios</a>
+                <a href="reportes.html">Reportes</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Reportes</h2>
+                </div>
+                <div class="card-body">
+                    <h3>Reporte de Citas por Dia</h3>
+                    <p>Selecciona una fecha para ver el reporte completo de citas del dia.</p>
+                    
+                    <div class="d-flex gap-3 flex-wrap mb-3">
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label class="form-label">Fecha Inicio</label>
+                            <input type="date" id="fechaInicio" class="form-control">
+                        </div>
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label class="form-label">Fecha Fin</label>
+                            <input type="date" id="fechaFin" class="form-control">
+                        </div>
+                        <div class="form-group" style="flex: 0; display: flex; align-items: flex-end;">
+                            <button class="btn btn-primary" onclick="generarReporte()">Generar Reporte</button>
+                        </div>
+                    </div>
+
+                    <div id="reporteContainer" class="mt-3">
+                        <p class="text-info">Selecciona las fechas y haz clic en "Generar Reporte"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/api.js"></script>
+    <script>
+        function generarReporte() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+            
+            if (!fechaInicio || !fechaFin) {
+                alert('Selecciona ambas fechas');
+                return;
+            }
+            
+            // Aqui iria la logica para generar el reporte
+            document.getElementById('reporteContainer').innerHTML = `
+                <div class="alert alert-info">
+                    Reporte generado del ${fechaInicio} al ${fechaFin}
+                </div>
+                <p>Funcionalidad en desarrollo...</p>
+            `;
+        }
+    </script>
+</body>
+</html>

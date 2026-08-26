@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Citas - Hospital</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-content">
+            <h1>Hospital Citas</h1>
+            <nav class="nav">
+                <a href="index.html">Citas</a>
+                <a href="pages/horarios.html">Horarios</a>
+                <a href="pages/reportes.html">Reportes</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Filtros -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Fichas de Citas</h2>
+                    <button class="btn btn-primary" onclick="showModal('nuevaCitaModal')">
+                        + Nueva Cita
+                    </button>
+                </div>
+                <div class="d-flex gap-3 flex-wrap">
+                    <div class="form-group" style="flex: 1; min-width: 200px;">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" id="fecha" class="form-control">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 200px;">
+                        <label class="form-label">Estado</label>
+                        <select id="filtroEstado" class="form-control">
+                            <option value="">Todos</option>
+                            <option value="R">Registrada</option>
+                            <option value="C">Confirmada</option>
+                            <option value="A">Atendida</option>
+                            <option value="N">No asistio</option>
+                            <option value="X">Cancelada</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 0; display: flex; align-items: flex-end;">
+                        <button id="buscarBtn" class="btn btn-secondary">Buscar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Citas -->
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nro</th>
+                                <th>Paciente</th>
+                                <th>Medico</th>
+                                <th>Especialidad</th>
+                                <th>Fecha</th>
+                                <th>Hora</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="citasTable">
+                            <tr>
+                                <td colspan="8" class="text-center">Cargando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Nueva Cita -->
+    <div id="nuevaCitaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Nueva Cita</h3>
+                <button class="modal-close" onclick="hideModal('nuevaCitaModal')">&times;</button>
+            </div>
+            <form id="citaForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">CI Paciente *</label>
+                        <input type="text" id="ciPaciente" class="form-control" required 
+                               placeholder="Ingrese CI del paciente">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ID Persona (si existe)</label>
+                        <input type="number" id="idPersona" class="form-control" 
+                               placeholder="Dejar en 0 si no existe">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Especialidad *</label>
+                        <select id="especialidad" class="form-control" required>
+                            <option value="">Seleccione especialidad...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Medico *</label>
+                        <select id="medico" class="form-control" required>
+                            <option value="">Seleccione especialidad primero...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fecha *</label>
+                        <input type="date" id="fechaCita" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Horario *</label>
+                        <select id="horario" class="form-control" required>
+                            <option value="">Seleccione medico y fecha...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hora de la Cita *</label>
+                        <input type="time" id="horaCita" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Observacion</label>
+                        <textarea id="observacion" class="form-control" rows="3" 
+                                  placeholder="Motivo de la consulta..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('nuevaCitaModal')">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        Registrar Cita
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/citas.js"></script>
+</body>
+</html>
