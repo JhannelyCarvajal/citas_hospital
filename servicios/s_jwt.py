@@ -9,7 +9,6 @@ ALGORITHM = "HS256"
     ### Genera un token
     ### **************************************************************
 def generar_token(data: dict) -> str:
-    print(config)
     payload = data.copy()
     expiracion = datetime.now(timezone.utc) + timedelta(minutes=config.jwt_expira_minutos)
     payload.update({"exp": expiracion})
