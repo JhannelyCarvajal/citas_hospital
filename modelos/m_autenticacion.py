@@ -18,7 +18,7 @@ async def verifica_usuario(ci: str, conn: Connection) -> dict:
         "SELECT ci FROM tp_asegurado WHERE ci = $1 AND estado = TRUE",
         ci
     )
-    tipo = "A" if asegurado else "P"
+    tipo = "Asegurado" if asegurado else "Particular"
 
     return {
         "resultado": True,

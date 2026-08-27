@@ -173,7 +173,7 @@ CREATE TABLE tficha (
     nro_ficha       integer NOT NULL,
     id_persona      integer NOT NULL,
     ci_paciente     varchar(15) NOT NULL,
-    tipo_paciente   char(1)     NOT NULL DEFAULT 'P',
+    tipo_paciente   varchar(11) NOT NULL DEFAULT 'Particular',
     id_asegurado    varchar(15) REFERENCES tasegurado(ci),
     id_medico       integer NOT NULL REFERENCES templeados(id_empleado),
     id_especialidad integer NOT NULL REFERENCES tespecialidad(id_especialidad),
@@ -181,15 +181,15 @@ CREATE TABLE tficha (
     id_servicio     integer REFERENCES tservicios(id_servicio),
     fech_cita       date NOT NULL,
     hora_cita       time WITHOUT TIME ZONE NOT NULL,
-    -- Estado: R=Registrada C=Confirmada A=Atendida N=No asistio X=Cancelada
-    estado          char(1) NOT NULL DEFAULT 'R',
+    -- Estado: Registrada=Confirmada=Atendida=No asistio=Cancelada
+    estado          varchar(11) NOT NULL DEFAULT 'Registrada',
     observacion     varchar(200) NOT NULL DEFAULT '',
     fech_reg        timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     usuario_reg     varchar(15) NOT NULL DEFAULT '',
     CONSTRAINT tficha_tipo_paciente_check
-        CHECK (tipo_paciente IN ('A','P')),   -- A=Asegurado P=Particular
+        CHECK (tipo_paciente IN ('Asegurado','Particular')),
     CONSTRAINT tficha_estado_check
-        CHECK (estado IN ('R','C','A','N','X'))
+        CHECK (estado IN ('Registrada','Confirmada','Atendida','No asistio','Cancelada'))
 );
 
 
@@ -301,7 +301,7 @@ BEGIN
                 SELECT COUNT(*) FROM tficha f
                  WHERE f.id_horario = h.id_horario
                    AND f.fech_cita  = pfech_cita
-                   AND f.estado <> 'X'))::INTEGER
+                   AND f.estado <> 'Cancelada'))::INTEGER
       FROM thorario h
       JOIN templeados em ON em.id_empleado = h.id_empleado AND em.activo = TRUE
       JOIN tpersonas p   ON p.id_persona = em.id_persona
@@ -315,20 +315,20 @@ BEGIN
             SELECT COUNT(*) FROM tficha f
              WHERE f.id_horario = h.id_horario
                AND f.fech_cita  = pfech_cita
-               AND f.estado <> 'X')
+               AND f.estado <> 'Cancelada')
      ORDER BY t.id_turno, h.hora_inicio;
 END;
 $function$;
 
 -- Registro y cambio de estado de fichas (RPC para PostgREST) --------------
-CREATE OR REPLACE PROCEDURE public.pficha(IN oper integer, IN pid_ficha integer, IN pid_persona integer, IN pci character varying, IN pid_especialidad integer, IN pid_medico integer, IN pid_horario integer, IN pfech_cita date, IN phora_cita time without time zone, IN pestado character, IN pusuario character varying, IN pobservacion character varying, OUT resultado json)
+CREATE OR REPLACE PROCEDURE public.pficha(IN oper integer, IN pid_ficha integer, IN pid_persona integer, IN pci character varying, IN pid_especialidad integer, IN pid_medico integer, IN pid_horario integer, IN pfech_cita date, IN phora_cita time without time zone, IN pestado character varying, IN pusuario character varying, IN pobservacion character varying, OUT resultado json)
  LANGUAGE plpgsql
 AS $procedure$
 DECLARE
     filas          INT;
     v_id_ficha     INT;
     v_nro_ficha    INT;
-    v_tipo         CHAR(1);
+    v_tipo         VARCHAR(11);
     v_ci_aseg      VARCHAR(15);
     v_hora_ini     TIME;
     v_hora_fin     TIME;
@@ -373,7 +373,7 @@ BEGIN
         -- 5) Verificar cupos disponibles para ese horario y fecha
         SELECT COUNT(*) INTO v_ocupadas
           FROM tficha
-         WHERE id_horario = pid_horario AND fech_cita = pfech_cita AND estado <> 'X';
+         WHERE id_horario = pid_horario AND fech_cita = pfech_cita AND estado <> 'Cancelada';
 
         IF v_ocupadas >= v_nro_fichas THEN
             RAISE EXCEPTION 'No hay fichas disponibles para ese horario (cupo %)', v_nro_fichas;
@@ -385,9 +385,9 @@ BEGIN
          WHERE t.ci = pci AND t.estado = TRUE;
 
         IF v_ci_aseg IS NOT NULL THEN
-            v_tipo := 'A';
+            v_tipo := 'Asegurado';
         ELSE
-            v_tipo := 'P';
+            v_tipo := 'Particular';
         END IF;
 
         -- 7) Numero de ficha consecutivo del dia
@@ -401,7 +401,7 @@ BEGIN
                             estado, observacion, usuario_reg)
         VALUES (v_nro_ficha, pid_persona, pci, v_tipo, v_ci_aseg,
                 pid_medico, pid_especialidad, pid_horario, pfech_cita, phora_cita,
-                'R', pobservacion, pusuario)
+                'Registrada', pobservacion, pusuario)
         RETURNING id_ficha INTO v_id_ficha;
 
         resultado := json_build_object(
@@ -468,10 +468,7 @@ CREATE VIEW public.v_fichas_dia AS
         f.id_persona,
         f.ci_paciente,
         f.tipo_paciente,
-        CASE f.tipo_paciente
-            WHEN 'A'::bpchar THEN 'Asegurado'::text
-            ELSE 'Particular'::text
-        END AS tipo_desc,
+        f.tipo_paciente AS tipo_desc,
         CASE WHEN a.ci IS NOT NULL
              THEN ((a.nombre::text || ' ') || a.paterno::text) || ' ' || a.materno::text
              ELSE f.ci_paciente::text
@@ -482,14 +479,7 @@ CREATE VIEW public.v_fichas_dia AS
         f.fech_cita,
         f.hora_cita,
         f.estado,
-        CASE f.estado
-            WHEN 'R'::bpchar THEN 'Registrada'::text
-            WHEN 'C'::bpchar THEN 'Confirmada'::text
-            WHEN 'A'::bpchar THEN 'Atendida'::text
-            WHEN 'N'::bpchar THEN 'No asistio'::text
-            WHEN 'X'::bpchar THEN 'Cancelada'::text
-            ELSE NULL::text
-        END AS estado_desc,
+        f.estado AS estado_desc,
         f.observacion,
         f.fech_reg,
         f.usuario_reg

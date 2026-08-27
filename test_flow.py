@@ -46,12 +46,12 @@ async def main():
     print("\n== cotizar (particular) ==")
     s, cot = req("POST", "/api/citas/cotizar", {
         "id_especialidad": h["id_especialidad"], "id_servicio": serv0,
-        "tipo_paciente": "P", "monto": 150.0})
+        "tipo_paciente": "Particular", "monto": 150.0})
     print("cotizar:", s, cot)
 
     print("\n== crear ficha PARTICULAR ==")
     s, f = req("POST", "/api/citas/fichas", {
-        "id_persona": idp, "ci_paciente": "99999999", "tipo_paciente": "P",
+        "id_persona": idp, "ci_paciente": "99999999", "tipo_paciente": "Particular",
         "id_especialidad": h["id_especialidad"], "id_medico": h["id_medico"],
         "id_horario": h["id_horario"], "id_servicio": serv0,
         "fech_cita": hoy, "hora_cita": str(h["hora_inicio"]),
@@ -69,7 +69,7 @@ async def main():
 
     print("\n== crear ficha ASEGURADO (CI ficticio; tp_asegurado vacio => sera P) ==")
     s, fa = req("POST", "/api/citas/fichas", {
-        "id_persona": idp, "ci_paciente": "12345678", "tipo_paciente": "A",
+        "id_persona": idp, "ci_paciente": "12345678", "tipo_paciente": "Asegurado",
         "id_especialidad": h["id_especialidad"], "id_medico": h["id_medico"],
         "id_horario": h["id_horario"], "id_servicio": serv0,
         "fech_cita": hoy, "hora_cita": str(h["hora_inicio"]), "usuario_reg": "tester"})

@@ -4,15 +4,15 @@ from datetime import date, datetime, time
 from enum import Enum
 
 class TipoPaciente(str, Enum):
-    A = "A"
-    P = "P"
+    Asegurado = "Asegurado"
+    Particular = "Particular"
 
 class EstadoFicha(str, Enum):
-    R = "R"
-    C = "C"
-    A = "A"
-    N = "N"
-    X = "X"
+    Registrada = "Registrada"
+    Confirmada = "Confirmada"
+    Atendida = "Atendida"
+    NoAsistio = "No asistio"
+    Cancelada = "Cancelada"
 
 class FichaBase(BaseModel):
     ci_paciente: str
@@ -26,7 +26,7 @@ class FichaBase(BaseModel):
 
 class FichaCreate(FichaBase):
     id_persona: int
-    tipo_paciente: TipoPaciente = TipoPaciente.P
+    tipo_paciente: TipoPaciente = TipoPaciente.Particular
     monto: Optional[float] = None
     metodo_pago: Optional[str] = None
     usuario_reg: str = ""
@@ -38,7 +38,7 @@ class FichaUpdate(BaseModel):
 class CotizacionIn(BaseModel):
     id_especialidad: int
     id_servicio: int
-    tipo_paciente: TipoPaciente = TipoPaciente.P
+    tipo_paciente: TipoPaciente = TipoPaciente.Particular
     monto: float
 
 class CotizacionOut(BaseModel):

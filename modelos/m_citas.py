@@ -30,7 +30,7 @@ async def _validar_horario(conn: Connection, ficha: FichaCreate):
         if not (ficha.hora_cita >= h["hora_inicio"] or ficha.hora_cita <= h["hora_fin"]):
             raise ValueError(f"La hora {ficha.hora_cita} no esta dentro del horario nocturno {h['hora_inicio']} - {h['hora_fin']}")
     ocupadas = await conn.fetchval(
-        "SELECT COUNT(*) FROM tc_ficha WHERE id_horario = $1 AND fech_cita = $2 AND estado <> 'X'",
+        "SELECT COUNT(*) FROM tc_ficha WHERE id_horario = $1 AND fech_cita = $2 AND estado <> 'Cancelada'",
         ficha.id_horario, ficha.fech_cita
     )
     if ocupadas >= h["nro_fichas"]:
@@ -42,9 +42,9 @@ async def crear_ficha(conn: Connection, ficha: FichaCreate, usuario_reg: str) ->
     ci_aseg = await conn.fetchval(
         "SELECT ci FROM tp_asegurado WHERE ci = $1 AND estado = TRUE", ficha.ci_paciente
     )
-    tipo = "A" if ci_aseg else "P"
+    tipo = "Asegurado" if ci_aseg else "Particular"
     # Asegurado: ficha valida de inmediato. Particular: pendiente de pago.
-    estado = "C" if tipo == "A" else "R"
+    estado = "Confirmada" if tipo == "Asegurado" else "Registrada"
 
     nro_ficha = await conn.fetchval(
         "SELECT COALESCE(MAX(nro_ficha), 0) + 1 FROM tc_ficha WHERE fech_cita = $1",
@@ -52,7 +52,7 @@ async def crear_ficha(conn: Connection, ficha: FichaCreate, usuario_reg: str) ->
     )
 
     observacion = ficha.observacion or ""
-    if tipo == "P":
+    if tipo == "Particular":
         monto = ficha.monto if ficha.monto is not None else 0
         observacion = f"MONTO:{monto}|PAGO:PENDIENTE|{observacion}".rstrip("|")
 
@@ -68,7 +68,7 @@ async def crear_ficha(conn: Connection, ficha: FichaCreate, usuario_reg: str) ->
     )
 
     mensaje = "Ficha registrada correctamente"
-    if tipo == "P":
+    if tipo == "Particular":
         mensaje = "Ficha registrada. Envie al paciente a pagar para validarla."
     return {
         "success": True,
@@ -121,10 +121,10 @@ async def pagar_ficha(conn: Connection, id_ficha: int, metodo_pago: str,
     f = await obtener_ficha(conn, id_ficha)
     if not f:
         raise ValueError("Ficha no encontrada")
-    if f.get("tipo_paciente") != "P":
+    if f.get("tipo_paciente") != "Particular":
         raise ValueError("Solo las fichas de particulares requieren registro de pago")
-    if f.get("estado") == "C":
-        return {"success": True, "id_ficha": id_ficha, "estado": "C", "mensaje": "Ficha ya pagada/valida"}
+    if f.get("estado") == "Confirmada":
+        return {"success": True, "id_ficha": id_ficha, "estado": "Confirmada", "mensaje": "Ficha ya pagada/valida"}
 
     obs_actual = f.get("observacion") or ""
     obs_nueva = obs_actual.replace("PAGO:PENDIENTE", f"PAGO:OK|METODO:{metodo_pago}")
@@ -135,13 +135,13 @@ async def pagar_ficha(conn: Connection, id_ficha: int, metodo_pago: str,
     obs_nueva = obs_nueva.rstrip("|")
 
     await conn.execute(
-        "UPDATE tc_ficha SET estado = 'C', observacion = $1 WHERE id_ficha = $2",
+        "UPDATE tc_ficha SET estado = 'Confirmada', observacion = $1 WHERE id_ficha = $2",
         obs_nueva, id_ficha
     )
     return {
         "success": True,
         "id_ficha": id_ficha,
-        "estado": "C",
+        "estado": "Confirmada",
         "mensaje": "Pago registrado. Ficha valida para atencion.",
     }
 
