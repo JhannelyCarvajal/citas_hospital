@@ -1,7 +1,7 @@
+from contextlib import asynccontextmanager
 import asyncpg
 from fastapi import FastAPI, Request
-from contextlib import asynccontextmanager
-from backend.parametros import config
+from configuracion.parametros import config
 
 DB_CONFIG = f"postgresql://{config.db_user}:{config.db_pass}@{config.db_host}:{config.db_port}/{config.db_name}"
 
