@@ -5,7 +5,7 @@
 window.STORE = null;
 
 const VISTAS = {
-  dashboard: { titulo: "Dashboard", sub: "Resumen del día" },
+  dashboard: { titulo: "Resumen", sub: "Resumen del día" },
   citas: { titulo: "Citas", sub: "Gestión de citas médicas" },
   catalogos: { titulo: "Catálogos", sub: "Listas de apoyo (solo lectura)" },
 };

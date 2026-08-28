@@ -410,6 +410,11 @@ body {
   z-index: 300;
 }
 
+.loader[hidden],
+.modal-backdrop[hidden] {
+  display: none;
+}
+
 .spinner {
   width: 44px;
   height: 44px;
