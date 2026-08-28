@@ -228,14 +228,12 @@ function abrirNuevaCita() {
     ""
   );
   llenarSelect("ncEsp", store.especialidades.map((e) => [e.id_especialidad, e.nombre_especialidad]), "");
-  llenarSelect("ncServ", [[ "", "Sin servicio" ], ...store.servicios.map((s) => [s.id_servicio, s.nombre_servicio])], "");
+  llenarSelect("ncServ", store.servicios.map((s) => [s.id_servicio, s.nombre_servicio]), "");
 
   document.getElementById("ncFecha").value = hoyISO();
   document.getElementById("ncHora").value = "";
   document.getElementById("ncObs").value = "";
   document.getElementById("ncHorInfo").textContent = "";
-  document.getElementById("ncFechaInfo").textContent = "";
-  document.getElementById("ncHoraInfo").textContent = "";
 
   fillHorarios();
   mostrarModal("modalNuevaCita");
@@ -331,19 +329,12 @@ function recalcularCita(resetFecha = true) {
   const hor = store.horById[horId];
   const fechaEl = document.getElementById("ncFecha");
   const horaEl = document.getElementById("ncHora");
-  const serv = document.getElementById("ncServ").value;
-  const conServicio = Boolean(serv);
 
   const infoHor = document.getElementById("ncHorInfo");
-  const infoFecha = document.getElementById("ncFechaInfo");
-  const infoHora = document.getElementById("ncHoraInfo");
-
-  for (const el of [infoHor, infoFecha, infoHora]) el.classList.remove("hint-danger");
+  infoHor.classList.remove("hint-danger");
 
   if (!hor) {
     infoHor.textContent = "";
-    infoFecha.textContent = "";
-    infoHora.textContent = "";
     return;
   }
 
@@ -368,46 +359,12 @@ function recalcularCita(resetFecha = true) {
     : `Ficha ${cupoTotal} de ${hor.nro_fichas} — ${base}`;
   if (lleno) infoHor.classList.add("hint-danger");
 
-  infoFecha.textContent = `El horario es de ${procesarDiaSemana(
-    hor.dia_semana
-  )}; la fecha se ajustó automáticamente a ese día.`;
-
   if (lleno) {
     horaEl.value = "";
-    infoHora.textContent = "Elige otro médico o cambia la fecha.";
-    infoHora.classList.add("hint-danger");
     return;
   }
 
-  if (conServicio) {
-    horaEl.value = "";
-    infoHora.textContent = "Con servicio la hora se asigna manualmente, depende de la disponibilidad.";
-  } else {
-    const sugerida = sumarMinutos(hor.hora_inicio, usadas * 15);
-    horaEl.value = sugerida;
-    infoHora.textContent =
-      usadas === 0
-        ? `Empieza a la hora de llegada (${fmtHora(hor.hora_inicio)}).`
-        : `Hay ${usadas} ficha(s) de este médico ese día; llegue unos 15 min después (${fmtHora(sugerida)}).`;
-  }
-}
-
-function validarFecha() {
-  const fechaEl = document.getElementById("ncFecha");
-  const horId = Number(document.getElementById("ncHor").value || 0);
-  const hor = store.horById[horId];
-  if (!hor) {
-    fechaSugerida = fechaEl.value;
-    return;
-  }
-  const [y, m, d] = fechaEl.value.split("-").map(Number);
-  const dow = new Date(y, m - 1, d).getDay();
-  if (dow !== hor.dia_semana % 7) {
-    toast(`La fecha debe caer en ${procesarDiaSemana(hor.dia_semana)}`, "error");
-    fechaEl.value = fechaSugerida;
-    return;
-  }
-  recalcularCita(false);
+  horaEl.value = sumarMinutos(hor.hora_inicio, usadas * 15);
 }
 
 /* ---- Guardar nueva cita ---- */
@@ -446,8 +403,9 @@ async function guardarNuevaCita() {
     usuario_reg: "admin",
   };
 
-  const sv = document.getElementById("ncServ").value;
-  if (sv) body.id_servicio = Number(sv);
+  const sv = Number(document.getElementById("ncServ").value || 0);
+  if (!sv) return toast("Selecciona el servicio", "error");
+  body.id_servicio = sv;
 
   const btn = document.getElementById("ncSubmit");
   btn.disabled = true;
@@ -455,8 +413,11 @@ async function guardarNuevaCita() {
     await apiPost("/fichas/", body);
     toast("Cita registrada correctamente");
     cerrarModal("modalNuevaCita");
+    document.getElementById("repDesde").value = fecha;
+    document.getElementById("repHasta").value = fecha;
     document.getElementById("citasFecha").value = fecha;
     await recargarYRender();
+    irA("reportes");
   } catch (e) {
     toast(`No se pudo registrar: ${esc(e.message)}`, "error");
   } finally {
@@ -523,7 +484,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("ncMedico").addEventListener("change", fillHorarios);
   document.getElementById("ncHor").addEventListener("change", () => recalcularCita(true));
   document.getElementById("ncServ").addEventListener("change", () => recalcularCita(false));
-  document.getElementById("ncFecha").addEventListener("change", validarFecha);
 
   document.getElementById("citasTbody").addEventListener("click", (ev) => {
     const btn = ev.target.closest("button[data-id]");

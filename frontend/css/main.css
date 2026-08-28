@@ -166,6 +166,13 @@ body {
   border-color: var(--primary);
 }
 
+.form-control[disabled] {
+  background: var(--gray-100);
+  color: var(--gray-800);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 .field-full { grid-column: 1 / -1; }
 
 .form-grid {
