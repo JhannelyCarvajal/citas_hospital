@@ -1,5 +1,14 @@
 from asyncpg import Connection
+from datetime import date
 from typing import List, Optional
+
+TIPOS_EMPLEADO = {
+    'medico': 'Medico', 'enfermero': 'Enfermero', 'administrativo': 'Administrativo',
+    'auxiliar': 'Auxiliar', 'otro': 'Otro',
+}
+
+def _normalizar_tipo_empleado(tipo_empleado: str) -> str:
+    return TIPOS_EMPLEADO.get(str(tipo_empleado).strip().lower(), tipo_empleado)
 
 async def get_all(conn: Connection) -> List[dict]:
     rows = await conn.fetch("SELECT * FROM tp_empleados ORDER BY id_empleado")
@@ -13,7 +22,7 @@ async def create(conn: Connection, data: dict) -> dict:
     row = await conn.fetchrow(
         """INSERT INTO tp_empleados (id_persona, id_area, tipo_empleado, fecha_contratacion, fecha_terminacion, id_turno, sueldo_base, nmp, activo)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *""",
-        data['id_persona'], data.get('id_area'), data['tipo_empleado'], data.get('fecha_contratacion'),
+        data['id_persona'], data.get('id_area'), _normalizar_tipo_empleado(data['tipo_empleado']), data.get('fecha_contratacion') or date.today(),
         data.get('fecha_terminacion'), data.get('id_turno'), data.get('sueldo_base', 0.0),
         data.get('nmp', ''), data.get('activo', True)
     )
@@ -25,6 +34,8 @@ async def update(conn: Connection, id_empleado: int, data: dict) -> Optional[dic
     i = 1
     for key, value in data.items():
         if value is not None:
+            if key == 'tipo_empleado':
+                value = _normalizar_tipo_empleado(value)
             fields.append(f"{key} = ${i}")
             params.append(value)
             i += 1

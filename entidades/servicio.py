@@ -7,8 +7,10 @@ class ServicioBase(BaseModel):
     descripcion: str = ""
     activo: bool = True
 
-class ServicioCreate(ServicioBase):
-    pass
+class ServicioCreate(BaseModel):
+    nombre_servicio: str
+    descripcion: str = ""
+    activo: bool = True
 
 class ServicioUpdate(BaseModel):
     nombre_servicio: Optional[str] = None

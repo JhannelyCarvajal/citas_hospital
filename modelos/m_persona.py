@@ -1,6 +1,12 @@
 from asyncpg import Connection
 from typing import List, Optional
 
+def _normalizar_genero(genero):
+    if genero is None:
+        return None
+    g = str(genero).strip().upper()
+    return g if g in ('M', 'F', 'O') else genero
+
 async def get_all(conn: Connection) -> List[dict]:
     rows = await conn.fetch("SELECT * FROM tp_personas ORDER BY id_persona")
     return [dict(r) for r in rows]
@@ -14,7 +20,7 @@ async def create(conn: Connection, data: dict) -> dict:
         """INSERT INTO tp_personas (ci, nombres, apellidos, fecha_nacimiento, genero, telefono, email, direccion, activo)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *""",
         data['ci'], data['nombres'], data.get('apellidos', ''), data.get('fecha_nacimiento'),
-        data.get('genero'), data.get('telefono', ''), data.get('email', ''), data.get('direccion'),
+        _normalizar_genero(data.get('genero')), data.get('telefono', ''), data.get('email', ''), data.get('direccion'),
         data.get('activo', True)
     )
     return dict(row)
@@ -25,6 +31,8 @@ async def update(conn: Connection, id_persona: int, data: dict) -> Optional[dict
     i = 1
     for key, value in data.items():
         if value is not None:
+            if key == 'genero':
+                value = _normalizar_genero(value)
             fields.append(f"{key} = ${i}")
             params.append(value)
             i += 1

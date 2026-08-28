@@ -11,9 +11,9 @@ async def get_by_id(conn: Connection, id_servicio: int) -> Optional[dict]:
 
 async def create(conn: Connection, data: dict) -> dict:
     row = await conn.fetchrow(
-        """INSERT INTO tc_servicios (id_servicio, nombre_servicio, descripcion, activo)
-           VALUES ($1, $2, $3, $4) RETURNING *""",
-        data['id_servicio'], data['nombre_servicio'], data.get('descripcion', ''), data.get('activo', True)
+        """INSERT INTO tc_servicios (nombre_servicio, descripcion, activo)
+           VALUES ($1, $2, $3) RETURNING *""",
+        data['nombre_servicio'], data.get('descripcion', ''), data.get('activo', True)
     )
     return dict(row)
 
