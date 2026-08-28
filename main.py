@@ -1,17 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from configuracion.conexion import lifespan
-from routes.r_citas import router as citas_router
-from routes.r_catalogos import router as catalogos_router
+from rutas import r_especialidad, r_persona, r_empleado, r_horario, r_ficha, r_servicio, r_turno
 
 app = FastAPI(
-    title="Hospital Citas API",
-    description="API para gestion de citas medicas - Hospital Prototipo",
+    title="Módulo de Citas - API",
+    description="API básica para gestión de citas médicas (sin autenticación)",
     version="1.0.0",
-    lifespan=lifespan,
+    lifespan=lifespan
 )
 
-# CORS (para que el frontend pueda consumir la API)
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,17 +19,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Incluir routers
+app.include_router(r_especialidad.router)
+app.include_router(r_persona.router)
+app.include_router(r_empleado.router)
+app.include_router(r_horario.router)
+app.include_router(r_ficha.router)
+app.include_router(r_servicio.router)
+app.include_router(r_turno.router)
+
 @app.get("/")
 async def root():
-    return {
-        "message": "Hospital Citas API",
-        "docs": "/docs",
-        "version": "1.0.0",
-    }
+    return {"message": "Módulo de Citas - API funcionando"}
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
-
-app.include_router(citas_router)
-app.include_router(catalogos_router)
+    return {"status": "ok"}
