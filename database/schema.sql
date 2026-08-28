@@ -1142,7 +1142,7 @@ CREATE TABLE public.tc_ficha (
     nro_ficha integer NOT NULL,
     id_persona integer NOT NULL,
     ci_paciente character varying(15) NOT NULL,
-    tipo_paciente character varying(11) DEFAULT 'Particular'::character varying NOT NULL,
+    tipo_paciente character varying(30) DEFAULT 'Particular'::character varying NOT NULL,
     id_asegurado character varying(15),
     id_medico integer NOT NULL,
     id_especialidad integer NOT NULL,
@@ -1155,7 +1155,7 @@ CREATE TABLE public.tc_ficha (
     fech_reg timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     usuario_reg character varying(15) DEFAULT ''::character varying NOT NULL,
     CONSTRAINT tc_ficha_estado_check CHECK (((estado)::text = ANY ((ARRAY['Registrada'::character varying, 'Confirmada'::character varying, 'Atendida'::character varying, 'No asistio'::character varying, 'Cancelada'::character varying])::text[]))),
-    CONSTRAINT tc_ficha_tipo_paciente_check CHECK (((tipo_paciente)::text = ANY ((ARRAY['Asegurado'::character varying, 'Particular'::character varying])::text[])))
+    CONSTRAINT tc_ficha_tipo_paciente_check CHECK (((tipo_paciente)::text = ANY ((ARRAY['Asegurado'::character varying, 'Asegurado vencido'::character varying, 'Particular'::character varying])::text[])))
 );
 
 
@@ -2177,9 +2177,10 @@ CREATE TABLE public.tp_asegurado (
     nombre character varying(50) NOT NULL,
     paterno character varying(30) DEFAULT ''::character varying NOT NULL,
     materno character varying(30) DEFAULT ''::character varying NOT NULL,
-    nro_poliza character varying(30) DEFAULT ''::character varying NOT NULL,
+nro_poliza character varying(30) DEFAULT ''::character varying NOT NULL,
     fech_nac date,
     fech_afiliacion date DEFAULT CURRENT_DATE NOT NULL,
+    fech_fin date,
     estado boolean DEFAULT true NOT NULL
 );
 

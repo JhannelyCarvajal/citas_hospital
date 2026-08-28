@@ -34,3 +34,5 @@ class PersonaAseguradoOut(BaseModel):
     nombre: Optional[str] = None
     id_aseguradora: Optional[int] = None
     nro_poliza: Optional[str] = None
+    fech_fin: Optional[date] = None
+    vencido: bool = False

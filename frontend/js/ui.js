@@ -59,8 +59,9 @@ function badgeEstado(estado) {
 }
 
 function badgeTipo(tipo) {
-  const clase = tipo === "Asegurado" ? "badge-info" : "badge-gray";
-  return `<span class="badge ${clase}">${esc(tipo || "Particular")}</span>`;
+  if (tipo === "Asegurado") return `<span class="badge badge-info">Asegurado</span>`;
+  if (tipo === "Asegurado vencido") return `<span class="badge badge-danger">Asegurado vencido</span>`;
+  return `<span class="badge badge-gray">${esc(tipo || "Particular")}</span>`;
 }
 
 function toast(message, type = "success") {

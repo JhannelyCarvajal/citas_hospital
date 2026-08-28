@@ -1,4 +1,5 @@
 from asyncpg import Connection
+from datetime import date
 from typing import List, Optional
 
 async def get_all(conn: Connection) -> List[dict]:
@@ -32,12 +33,22 @@ async def create(conn: Connection, data: dict) -> dict:
     if es_medico:
         raise ValueError("Un medico no puede registrarse como paciente")
 
-    # 3) Verificar si el paciente es asegurado
+    # 3) Verificar si el paciente es asegurado (estado vigente o vencido)
     asegurado = await conn.fetchrow(
-        "SELECT ci FROM tp_asegurado WHERE ci = $1 AND estado = TRUE", ci
+        "SELECT ci, fech_fin FROM tp_asegurado WHERE ci = $1 AND estado = TRUE", ci
     )
-    tipo_paciente = "Asegurado" if asegurado else "Particular"
-    id_asegurado = asegurado["ci"] if asegurado else None
+    como_particular = bool(data.get('como_particular', False))
+    if asegurado and not como_particular:
+        vencido = asegurado['fech_fin'] is not None and asegurado['fech_fin'] < date.today()
+        if not vencido:
+            tipo_paciente = "Asegurado"
+            id_asegurado = asegurado["ci"]
+        else:
+            tipo_paciente = "Asegurado vencido"
+            id_asegurado = asegurado["ci"]
+    else:
+        tipo_paciente = "Particular"
+        id_asegurado = None
 
     # 4) Horario: debe existir, la fecha debe corresponder al dia de la semana,
     #    la hora debe estar dentro del rango y debe haber cupo disponible

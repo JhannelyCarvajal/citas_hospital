@@ -30,6 +30,7 @@ class FichaCreate(BaseModel):
     hora_cita: time
     observacion: str = ""
     usuario_reg: str = ""
+    como_particular: bool = False
 
 class FichaUpdate(BaseModel):
     estado: Optional[str] = None

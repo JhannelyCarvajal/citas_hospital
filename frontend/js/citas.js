@@ -185,8 +185,6 @@ function renderCitas() {
 async function cambiarEstado(id, estado) {
   const ficha = store.fichaById[id];
   if (!ficha) return;
-  const ok = confirm(`¿Marcar la cita #${ficha.nro_ficha} como "${estado}"?`);
-  if (!ok) return;
   try {
     showLoader(true);
     await apiPut(`/fichas/${id}`, { estado });
@@ -221,6 +219,9 @@ function abrirNuevaCita() {
   document.getElementById("ncCiBus").value = "";
   document.getElementById("ncPacInfo").hidden = true;
   document.getElementById("ncPacAlert").hidden = true;
+  document.getElementById("ncPacVence").hidden = true;
+  document.getElementById("ncComoBox").hidden = true;
+  document.getElementById("ncComoParticular").checked = false;
 
   llenarSelect(
     "ncMedico",
@@ -282,13 +283,31 @@ async function buscarPaciente() {
   document.getElementById("ncPacMail").textContent = persona.email || "—";
 
   const badge = document.getElementById("ncPacAseg");
+  const venceEl = document.getElementById("ncPacVence");
+  const comoBox = document.getElementById("ncComoBox");
+  const comoChk = document.getElementById("ncComoParticular");
   badge.textContent = "Particular";
   badge.className = "badge badge-gray";
+  venceEl.hidden = true;
+  comoBox.hidden = true;
+  comoChk.checked = false;
   try {
     const asg = await apiGet(`/personas/${encodeURIComponent(ci)}/asegurado`);
     if (asg && asg.es_asegurado) {
-      badge.textContent = `Asegurado · ${asg.nro_poliza || "con póliza"}`;
-      badge.className = "badge badge-info";
+      if (asg.vencido) {
+        badge.textContent = "Asegurado vencido";
+        badge.className = "badge badge-danger";
+        venceEl.textContent = `La póliza venció el ${fmtFechaCorta(asg.fech_fin)}`;
+        venceEl.hidden = false;
+        comoBox.hidden = false;
+      } else {
+        badge.textContent = "Asegurado";
+        badge.className = "badge badge-info";
+        if (asg.fech_fin) {
+          venceEl.textContent = `Vence: ${fmtFechaCorta(asg.fech_fin)}`;
+          venceEl.hidden = false;
+        }
+      }
     }
   } catch (_) {
     /* se mantiene como Particular */
@@ -406,6 +425,10 @@ async function guardarNuevaCita() {
   const sv = Number(document.getElementById("ncServ").value || 0);
   if (!sv) return toast("Selecciona el servicio", "error");
   body.id_servicio = sv;
+
+  if (document.getElementById("ncComoParticular").checked) {
+    body.como_particular = true;
+  }
 
   const btn = document.getElementById("ncSubmit");
   btn.disabled = true;

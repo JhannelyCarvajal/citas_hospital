@@ -1,6 +1,8 @@
 from asyncpg import Connection
 from typing import List, Optional
 
+from datetime import date
+
 def _normalizar_genero(genero):
     if genero is None:
         return None
@@ -49,8 +51,8 @@ async def delete(conn: Connection, id_persona: int) -> bool:
 
 async def es_asegurado(conn: Connection, ci: str) -> dict:
     row = await conn.fetchrow(
-        "SELECT ci, id_aseguradora, nombre, paterno, materno, nro_poliza FROM tp_asegurado "
-        "WHERE ci = $1 AND estado = TRUE",
+        "SELECT ci, id_aseguradora, nombre, paterno, materno, nro_poliza, fech_fin "
+        "FROM tp_asegurado WHERE ci = $1 AND estado = TRUE",
         ci
     )
     if not row:
@@ -60,12 +62,17 @@ async def es_asegurado(conn: Connection, ci: str) -> dict:
             "nombre": None,
             "id_aseguradora": None,
             "nro_poliza": None,
+            "fech_fin": None,
+            "vencido": False,
         }
     nombre_completo = f"{row['nombre']} {row['paterno']} {row['materno']}".strip()
+    vencido = row["fech_fin"] is not None and row["fech_fin"] < date.today()
     return {
         "ci": row["ci"],
         "es_asegurado": True,
         "nombre": nombre_completo,
         "id_aseguradora": row["id_aseguradora"],
         "nro_poliza": row["nro_poliza"],
+        "fech_fin": row["fech_fin"],
+        "vencido": vencido,
     }

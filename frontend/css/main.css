@@ -221,6 +221,27 @@ body {
   font-weight: 600;
 }
 
+.pac-vence {
+  margin-top: 10px;
+  background: #fff3cd;
+  color: #664d03;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pac-como { margin-top: 10px; }
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.check-row input { accent-color: var(--primary); cursor: pointer; }
+
 /* ---------------- Cards ---------------- */
 .cards {
   display: grid;
