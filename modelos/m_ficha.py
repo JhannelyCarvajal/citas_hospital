@@ -40,12 +40,12 @@ async def create(conn: Connection, data: dict) -> dict:
     como_particular = bool(data.get('como_particular', False))
     if asegurado and not como_particular:
         vencido = asegurado['fech_fin'] is not None and asegurado['fech_fin'] < date.today()
-        if not vencido:
-            tipo_paciente = "Asegurado"
-            id_asegurado = asegurado["ci"]
-        else:
-            tipo_paciente = "Asegurado vencido"
-            id_asegurado = asegurado["ci"]
+        if vencido:
+            raise ValueError(
+                "La poliza del paciente esta vencida: acepta registrarse como Particular para crear la ficha"
+            )
+        tipo_paciente = "Asegurado"
+        id_asegurado = asegurado["ci"]
     else:
         tipo_paciente = "Particular"
         id_asegurado = None

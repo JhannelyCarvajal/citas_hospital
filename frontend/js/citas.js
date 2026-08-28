@@ -15,6 +15,7 @@ let store = null;
 
 /* Estado del registro de cita (paciente seleccionado y fecha sugerida por horario) */
 let pacSel = null;
+let pacVencido = false;
 let fechaSugerida = "";
 
 function nombreCompleto(p) {
@@ -215,6 +216,7 @@ function llenarSelect(id, options, texto) {
 
 function abrirNuevaCita() {
   pacSel = null;
+  pacVencido = false;
   fechaSugerida = "";
   document.getElementById("ncCiBus").value = "";
   document.getElementById("ncPacInfo").hidden = true;
@@ -288,6 +290,7 @@ async function buscarPaciente() {
   const comoChk = document.getElementById("ncComoParticular");
   badge.textContent = "Particular";
   badge.className = "badge badge-gray";
+  pacVencido = false;
   venceEl.hidden = true;
   comoBox.hidden = true;
   comoChk.checked = false;
@@ -295,12 +298,14 @@ async function buscarPaciente() {
     const asg = await apiGet(`/personas/${encodeURIComponent(ci)}/asegurado`);
     if (asg && asg.es_asegurado) {
       if (asg.vencido) {
+        pacVencido = true;
         badge.textContent = "Asegurado vencido";
         badge.className = "badge badge-danger";
         venceEl.textContent = `La póliza venció el ${fmtFechaCorta(asg.fech_fin)}`;
         venceEl.hidden = false;
         comoBox.hidden = false;
       } else {
+        pacVencido = false;
         badge.textContent = "Asegurado";
         badge.className = "badge badge-info";
         if (asg.fech_fin) {
@@ -395,6 +400,11 @@ async function guardarNuevaCita() {
   }
   if (esPersonaMedico(pacSel.id_persona)) {
     toast("Un médico no puede ser paciente", "error");
+    return;
+  }
+
+  if (pacVencido && !document.getElementById("ncComoParticular").checked) {
+    toast("La póliza está vencida: marca 'Registrar como Particular' para crear la ficha", "error");
     return;
   }
 
