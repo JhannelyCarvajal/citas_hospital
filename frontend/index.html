@@ -194,14 +194,30 @@
       </div>
       <div class="modal-body">
         <div class="form-grid">
-          <label class="field">
-            <span>Paciente</span>
-            <select id="ncPersona" class="form-control"></select>
+          <label class="field field-full">
+            <span>Buscar paciente por CI</span>
+            <div class="buscar-row">
+              <input type="text" id="ncCiBus" class="form-control" placeholder="Escribe el CI del paciente…" autocomplete="off" />
+              <button type="button" class="btn btn-outline" id="btnBuscarPac">Buscar</button>
+            </div>
           </label>
-          <label class="field">
-            <span>CI paciente</span>
-            <input type="text" id="ncCi" class="form-control" readonly />
-          </label>
+
+          <div class="field field-full">
+            <div class="pac-info" id="ncPacInfo" hidden>
+              <div class="pac-info-top">
+                <strong id="ncPacNombre"></strong>
+                <span class="badge badge-gray" id="ncPacAseg">Particular</span>
+              </div>
+              <div class="pac-info-grid">
+                <div><span>CI</span><b id="ncPacCi"></b></div>
+                <div><span>Nacimiento</span><b id="ncPacNac"></b></div>
+                <div><span>Teléfono</span><b id="ncPacTel"></b></div>
+                <div><span>Email</span><b id="ncPacMail"></b></div>
+              </div>
+              <div class="pac-alert" id="ncPacAlert" hidden></div>
+            </div>
+          </div>
+
           <label class="field">
             <span>Médico</span>
             <select id="ncMedico" class="form-control"></select>
@@ -213,14 +229,17 @@
           <label class="field field-full">
             <span>Horario del médico</span>
             <select id="ncHor" class="form-control"></select>
+            <span class="hint" id="ncHorInfo"></span>
           </label>
           <label class="field">
             <span>Fecha</span>
             <input type="date" id="ncFecha" class="form-control" />
+            <span class="hint" id="ncFechaInfo"></span>
           </label>
           <label class="field">
             <span>Hora</span>
             <input type="time" id="ncHora" class="form-control" />
+            <span class="hint" id="ncHoraInfo"></span>
           </label>
           <label class="field">
             <span>Servicio (opcional)</span>

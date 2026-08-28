@@ -13,12 +13,22 @@ const VISTAS = {
 
 let store = null;
 
+/* Estado del registro de cita (paciente seleccionado y fecha sugerida por horario) */
+let pacSel = null;
+let fechaSugerida = "";
+
 function nombreCompleto(p) {
   return p ? `${p.nombres} ${p.apellidos}`.trim() : "—";
 }
 
 function nombreMedico(e) {
   return e ? nombreCompleto(store.personaById[e.id_persona]) : "—";
+}
+
+function esPersonaMedico(idPersona) {
+  return (store.empleados || []).some(
+    (e) => e.id_persona === idPersona && (e.tipo_empleado || "").toLowerCase() === "medico"
+  );
 }
 
 /* ---------- Carga de datos ---------- */
@@ -69,6 +79,10 @@ function fichasDeFecha(fecha) {
   return (store.fichas || [])
     .filter((f) => f.fech_cita === fecha)
     .sort((a, b) => String(a.hora_cita).localeCompare(String(b.hora_cita)) || (a.nro_ficha - b.nro_ficha));
+}
+
+function fichasMedicoDia(medId, fecha) {
+  return (store.fichas || []).filter((f) => f.id_medico === medId && f.fech_cita === fecha);
 }
 
 /* ---------- Resumen / Dashboard ---------- */
@@ -201,15 +215,13 @@ function llenarSelect(id, options, texto) {
   sel.innerHTML = options.map((o) => `<option value="${o[0]}">${esc(o[1])}</option>`).join("");
 }
 
-function personaOptions() {
-  return (store.personas || [])
-    .slice()
-    .sort((a, b) => a.nombres.localeCompare(b.nombres))
-    .map((p) => [p.id_persona, `${p.ci} · ${p.nombres} ${p.apellidos}`.trim()]);
-}
-
 function abrirNuevaCita() {
-  llenarSelect("ncPersona", personaOptions(), "");
+  pacSel = null;
+  fechaSugerida = "";
+  document.getElementById("ncCiBus").value = "";
+  document.getElementById("ncPacInfo").hidden = true;
+  document.getElementById("ncPacAlert").hidden = true;
+
   llenarSelect(
     "ncMedico",
     store.medList.map((e) => [e.id_empleado, `${nombreMedico(e)} (${e.nmp || "sin NMP"})`.trim()]),
@@ -218,14 +230,14 @@ function abrirNuevaCita() {
   llenarSelect("ncEsp", store.especialidades.map((e) => [e.id_especialidad, e.nombre_especialidad]), "");
   llenarSelect("ncServ", [[ "", "Sin servicio" ], ...store.servicios.map((s) => [s.id_servicio, s.nombre_servicio])], "");
 
-  const fecha = document.getElementById("citasFecha").value || hoyISO();
-  document.getElementById("ncFecha").value = fecha;
+  document.getElementById("ncFecha").value = hoyISO();
   document.getElementById("ncHora").value = "";
-  document.getElementById("ncCi").value = "";
   document.getElementById("ncObs").value = "";
+  document.getElementById("ncHorInfo").textContent = "";
+  document.getElementById("ncFechaInfo").textContent = "";
+  document.getElementById("ncHoraInfo").textContent = "";
 
   fillHorarios();
-  sincronizarCi();
   mostrarModal("modalNuevaCita");
 }
 
@@ -238,25 +250,198 @@ function horarioTexto(h) {
 
 function fillHorarios() {
   const medId = Number(document.getElementById("ncMedico").value || 0);
-  const filtrados = (store.horarios || []).filter((h) => h.id_empleado === medId);
+  const filtrados = (store.horarios || []).filter((h) => h.id_empleado === medId && h.activo !== false);
   llenarSelect("ncHor", filtrados.map((h) => [h.id_horario, horarioTexto(h)]), "");
+  recalcularCita(true);
 }
 
-function sincronizarCi() {
-  const pid = Number(document.getElementById("ncPersona").value || 0);
-  const p = store.personaById[pid];
-  document.getElementById("ncCi").value = p ? p.ci : "";
+/* ---- Búsqueda de paciente por CI ---- */
+
+async function buscarPaciente() {
+  const ci = document.getElementById("ncCiBus").value.trim();
+  if (!ci) {
+    toast("Escribe el CI del paciente", "error");
+    return;
+  }
+  const persona = (store.personas || []).find((p) => p.ci === ci);
+  const info = document.getElementById("ncPacInfo");
+  const alert = document.getElementById("ncPacAlert");
+
+  if (!persona) {
+    pacSel = null;
+    info.hidden = true;
+    toast("Persona no encontrada con ese CI", "error");
+    return;
+  }
+
+  const esMedico = esPersonaMedico(persona.id_persona);
+  pacSel = persona;
+
+  document.getElementById("ncPacNombre").textContent = nombreCompleto(persona);
+  document.getElementById("ncPacCi").textContent = persona.ci;
+  document.getElementById("ncPacNac").textContent = persona.fecha_nacimiento ? fmtFechaCorta(persona.fecha_nacimiento) : "—";
+  document.getElementById("ncPacTel").textContent = persona.telefono || "—";
+  document.getElementById("ncPacMail").textContent = persona.email || "—";
+
+  const badge = document.getElementById("ncPacAseg");
+  badge.textContent = "Particular";
+  badge.className = "badge badge-gray";
+  try {
+    const asg = await apiGet(`/personas/${encodeURIComponent(ci)}/asegurado`);
+    if (asg && asg.es_asegurado) {
+      badge.textContent = `Asegurado · ${asg.nro_poliza || "con póliza"}`;
+      badge.className = "badge badge-info";
+    }
+  } catch (_) {
+    /* se mantiene como Particular */
+  }
+
+  if (esMedico) {
+    alert.textContent = "Esta persona es un médico: no puede registrarse como paciente.";
+    alert.hidden = false;
+  } else {
+    alert.hidden = true;
+  }
+  info.hidden = false;
 }
+
+/* ---- Horario / fecha / hora automáticas ---- */
+
+function nextDateWithWeekday(dow) {
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const objetivo = dow % 7;
+  for (let i = 0; i < 8; i++) {
+    const cand = new Date(hoy);
+    cand.setDate(hoy.getDate() + i);
+    if (cand.getDay() === objetivo) return fechaISO(cand);
+  }
+  return hoyISO();
+}
+
+function sumarMinutos(t, mins) {
+  const [hh, mm] = String(t).split(":").map(Number);
+  const total = hh * 60 + (mm || 0) + mins;
+  return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function recalcularCita(resetFecha = true) {
+  const medId = Number(document.getElementById("ncMedico").value || 0);
+  const horId = Number(document.getElementById("ncHor").value || 0);
+  const hor = store.horById[horId];
+  const fechaEl = document.getElementById("ncFecha");
+  const horaEl = document.getElementById("ncHora");
+  const serv = document.getElementById("ncServ").value;
+  const conServicio = Boolean(serv);
+
+  const infoHor = document.getElementById("ncHorInfo");
+  const infoFecha = document.getElementById("ncFechaInfo");
+  const infoHora = document.getElementById("ncHoraInfo");
+
+  for (const el of [infoHor, infoFecha, infoHora]) el.classList.remove("hint-danger");
+
+  if (!hor) {
+    infoHor.textContent = "";
+    infoFecha.textContent = "";
+    infoHora.textContent = "";
+    return;
+  }
+
+  let fecha = fechaEl.value;
+  if (resetFecha || !fecha) {
+    fecha = nextDateWithWeekday(hor.dia_semana);
+    fechaEl.value = fecha;
+  }
+  fechaSugerida = fecha;
+
+  const usadas = fichasMedicoDia(medId, fecha).length;
+  const cupoTotal = usadas + 1;
+  const lleno = usadas >= hor.nro_fichas;
+
+  const turno = (store.turnoById[hor.id_turno] || {}).nombre_turno || "";
+  const base = `${procesarDiaSemana(hor.dia_semana)} · ${fmtHora(hor.hora_inicio)}–${fmtHora(hor.hora_fin)}${
+    turno ? " · " + turno : ""
+  }`;
+
+  infoHor.textContent = lleno
+    ? `${base} · ficha ${cupoTotal} de ${hor.nro_fichas} — horario lleno`
+    : `Ficha ${cupoTotal} de ${hor.nro_fichas} — ${base}`;
+  if (lleno) infoHor.classList.add("hint-danger");
+
+  infoFecha.textContent = `El horario es de ${procesarDiaSemana(
+    hor.dia_semana
+  )}; la fecha se ajustó automáticamente a ese día.`;
+
+  if (lleno) {
+    horaEl.value = "";
+    infoHora.textContent = "Elige otro médico o cambia la fecha.";
+    infoHora.classList.add("hint-danger");
+    return;
+  }
+
+  if (conServicio) {
+    horaEl.value = "";
+    infoHora.textContent = "Con servicio la hora se asigna manualmente, depende de la disponibilidad.";
+  } else {
+    const sugerida = sumarMinutos(hor.hora_inicio, usadas * 15);
+    horaEl.value = sugerida;
+    infoHora.textContent =
+      usadas === 0
+        ? `Empieza a la hora de llegada (${fmtHora(hor.hora_inicio)}).`
+        : `Hay ${usadas} ficha(s) de este médico ese día; llegue unos 15 min después (${fmtHora(sugerida)}).`;
+  }
+}
+
+function validarFecha() {
+  const fechaEl = document.getElementById("ncFecha");
+  const horId = Number(document.getElementById("ncHor").value || 0);
+  const hor = store.horById[horId];
+  if (!hor) {
+    fechaSugerida = fechaEl.value;
+    return;
+  }
+  const [y, m, d] = fechaEl.value.split("-").map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  if (dow !== hor.dia_semana % 7) {
+    toast(`La fecha debe caer en ${procesarDiaSemana(hor.dia_semana)}`, "error");
+    fechaEl.value = fechaSugerida;
+    return;
+  }
+  recalcularCita(false);
+}
+
+/* ---- Guardar nueva cita ---- */
 
 async function guardarNuevaCita() {
+  if (!pacSel) {
+    toast("Busca primero al paciente por CI", "error");
+    return;
+  }
+  if (esPersonaMedico(pacSel.id_persona)) {
+    toast("Un médico no puede ser paciente", "error");
+    return;
+  }
+
+  const medId = Number(document.getElementById("ncMedico").value || 0);
+  const espId = Number(document.getElementById("ncEsp").value || 0);
+  const horId = Number(document.getElementById("ncHor").value || 0);
+  const fecha = document.getElementById("ncFecha").value;
+  const hora = document.getElementById("ncHora").value;
+
+  if (!medId) return toast("Selecciona el médico", "error");
+  if (!espId) return toast("Selecciona la especialidad", "error");
+  if (!horId) return toast("Selecciona el horario del médico", "error");
+  if (!fecha) return toast("Selecciona o confirma la fecha", "error");
+  if (!hora) return toast("Indica la hora de la cita", "error");
+
   const body = {
-    id_persona: Number(document.getElementById("ncPersona").value),
-    ci_paciente: document.getElementById("ncCi").value.trim(),
-    id_medico: Number(document.getElementById("ncMedico").value),
-    id_especialidad: Number(document.getElementById("ncEsp").value),
-    id_horario: Number(document.getElementById("ncHor").value),
-    fech_cita: document.getElementById("ncFecha").value,
-    hora_cita: document.getElementById("ncHora").value,
+    id_persona: pacSel.id_persona,
+    ci_paciente: pacSel.ci,
+    id_medico: medId,
+    id_especialidad: espId,
+    id_horario: horId,
+    fech_cita: fecha,
+    hora_cita: hora,
     observacion: document.getElementById("ncObs").value.trim(),
     usuario_reg: "admin",
   };
@@ -264,22 +449,13 @@ async function guardarNuevaCita() {
   const sv = document.getElementById("ncServ").value;
   if (sv) body.id_servicio = Number(sv);
 
-  const faltantes = ["id_persona", "ci_paciente", "id_medico", "id_especialidad", "id_horario", "fech_cita", "hora_cita"].filter(
-    (k) => !body[k] && body[k] !== 0
-  );
-
-  if (faltantes.length) {
-    toast("Faltan campos: " + faltantes.join(", "), "error");
-    return;
-  }
-
   const btn = document.getElementById("ncSubmit");
   btn.disabled = true;
   try {
     await apiPost("/fichas/", body);
     toast("Cita registrada correctamente");
     cerrarModal("modalNuevaCita");
-    document.getElementById("citasFecha").value = body.fech_cita;
+    document.getElementById("citasFecha").value = fecha;
     await recargarYRender();
   } catch (e) {
     toast(`No se pudo registrar: ${esc(e.message)}`, "error");
@@ -337,8 +513,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btnNuevaCitaEmpty").addEventListener("click", abrirNuevaCita);
   document.getElementById("ncSubmit").addEventListener("click", guardarNuevaCita);
 
-  document.getElementById("ncPersona").addEventListener("change", sincronizarCi);
+  document.getElementById("btnBuscarPac").addEventListener("click", buscarPaciente);
+  document.getElementById("ncCiBus").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      buscarPaciente();
+    }
+  });
   document.getElementById("ncMedico").addEventListener("change", fillHorarios);
+  document.getElementById("ncHor").addEventListener("change", () => recalcularCita(true));
+  document.getElementById("ncServ").addEventListener("change", () => recalcularCita(false));
+  document.getElementById("ncFecha").addEventListener("change", validarFecha);
 
   document.getElementById("citasTbody").addEventListener("click", (ev) => {
     const btn = ev.target.closest("button[data-id]");

@@ -25,7 +25,29 @@ function initReportes() {
   document.getElementById("btnGenerar").addEventListener("click", renderReportes);
   document.getElementById("btnExport").addEventListener("click", exportarCSV);
 
+  document.getElementById("repDesde").addEventListener("change", () => {
+    const desde = document.getElementById("repDesde").value;
+    const hasta = document.getElementById("repHasta").value;
+    if (desde && hasta && desde > hasta) {
+      toast('"Desde" no puede ser mayor que "Hasta"', "error");
+      document.getElementById("repDesde").value = hasta;
+    }
+  });
+
+  document.getElementById("repHasta").addEventListener("change", () => {
+    const desde = document.getElementById("repDesde").value;
+    const hasta = document.getElementById("repHasta").value;
+    if (desde && hasta && hasta < desde) {
+      toast('"Hasta" no puede ser menor que "Desde"', "error");
+      document.getElementById("repHasta").value = desde;
+    }
+  });
+
   renderReportes();
+}
+
+function fechaValida(desde, hasta) {
+  return !(desde && hasta && desde > hasta);
 }
 
 function fichasReporte() {
@@ -33,6 +55,7 @@ function fichasReporte() {
   if (!s) return [];
   const desde = document.getElementById("repDesde").value;
   const hasta = document.getElementById("repHasta").value;
+  if (!fechaValida(desde, hasta)) return [];
   const estado = document.getElementById("repEstado").value;
   const medico = document.getElementById("repMedico").value;
 

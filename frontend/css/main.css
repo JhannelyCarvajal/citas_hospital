@@ -174,6 +174,46 @@ body {
   gap: 14px;
 }
 
+.buscar-row { display: flex; gap: 8px; }
+.buscar-row .form-control { flex: 1; }
+
+.hint { font-size: 12px; color: var(--gray-500); margin-top: 4px; display: block; }
+.hint-danger { color: var(--danger); font-weight: 600; }
+
+.pac-info {
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--gray-100);
+}
+
+.pac-info-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.pac-info-top strong { font-size: 15px; }
+
+.pac-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 14px;
+  font-size: 13px;
+}
+.pac-info-grid span { color: var(--gray-500); font-size: 12px; display: block; }
+
+.pac-alert {
+  margin-top: 10px;
+  background: #f8d7da;
+  color: #842029;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* ---------------- Cards ---------------- */
 .cards {
   display: grid;
