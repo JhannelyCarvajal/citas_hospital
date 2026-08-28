@@ -15,6 +15,9 @@ class EmpleadoBase(BaseModel):
 class EmpleadoCreate(EmpleadoBase):
     pass
 
+class EmpleadoOut(EmpleadoBase):
+    id_empleado: int
+
 class EmpleadoUpdate(BaseModel):
     id_area: Optional[int] = None
     tipo_empleado: Optional[str] = None

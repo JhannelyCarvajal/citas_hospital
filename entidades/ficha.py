@@ -3,6 +3,7 @@ from typing import Optional
 from datetime import date, time
 
 class FichaBase(BaseModel):
+    id_ficha: int
     nro_ficha: int
     id_persona: int
     ci_paciente: str

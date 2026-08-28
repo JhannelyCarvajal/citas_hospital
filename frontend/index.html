@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hospital Prototipo · Módulo de Citas</title>
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-icon">🏥</span>
+        <div class="brand-text">
+          <strong>Hospital Prototipo</strong>
+          <span>Módulo de Citas</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">📋</span> Dashboard
+        </button>
+        <button class="nav-item" data-view="citas">
+          <span class="nav-icon">🗓️</span> Citas
+        </button>
+        <button class="nav-item" data-view="catalogos">
+          <span class="nav-icon">⚙️</span> Catálogos
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">Módulo académico · TECWEB II</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <div>
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle">Resumen del día</p>
+        </div>
+        <div class="header-right">
+          <span class="header-date" id="headerDate"></span>
+          <span class="user-chip">👤 Admin</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <!-- ==================== DASHBOARD ==================== -->
+        <section id="view-dashboard" class="view active">
+          <div class="toolbar">
+            <label class="field field-inline">
+              <span>Fecha</span>
+              <input type="date" id="dashFecha" class="form-control" />
+            </label>
+          </div>
+
+          <div class="cards" id="resumenCards"></div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Citas del día</h3>
+              <button class="btn btn-outline btn-sm" data-goto="citas">Ver todas</button>
+            </div>
+            <div class="table-wrap">
+              <table class="table" id="dashTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Paciente</th>
+                    <th>Médico</th>
+                    <th>Esp.</th>
+                    <th>Hora</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="dashTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== CITAS ==================== -->
+        <section id="view-citas" class="view">
+          <div class="toolbar">
+            <label class="field field-inline">
+              <span>Fecha</span>
+              <input type="date" id="citasFecha" class="form-control" />
+            </label>
+            <button class="btn btn-primary" id="btnNuevaCita">+ Nueva cita</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Citas del día <small id="citasFechaLabel"></small></h3>
+              <span class="muted">Total: <b id="citasTotal">0</b></span>
+            </div>
+            <div id="emptyCitas" class="empty-state" hidden>
+              <div class="empty-icon">🗓️</div>
+              <p>No hay citas para esta fecha.</p>
+              <button class="btn btn-primary btn-sm" id="btnNuevaCitaEmpty">Registrar la primera cita</button>
+            </div>
+            <div class="table-wrap" id="wrapCitas">
+              <table class="table" id="citasTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Paciente</th>
+                    <th>Tipo</th>
+                    <th>Médico</th>
+                    <th>Especialidad</th>
+                    <th>Hora</th>
+                    <th>Estado</th>
+                    <th class="th-acciones">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="citasTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== CATÁLOGOS ==================== -->
+        <section id="view-catalogos" class="view">
+          <div class="card">
+            <div class="card-header"><h3>Catálogos de apoyo</h3></div>
+            <p class="muted">Listas de referencia usadas al registrar citas (solo lectura).</p>
+          </div>
+          <div id="catalogoGrid"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ==================== MODAL: NUEVA CITA ==================== -->
+  <div class="modal-backdrop" id="modalNuevaCita" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Registrar nueva cita</h3>
+        <button class="btn-icon" data-close-modal="modalNuevaCita" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label class="field">
+            <span>Paciente</span>
+            <select id="ncPersona" class="form-control"></select>
+          </label>
+          <label class="field">
+            <span>CI paciente</span>
+            <input type="text" id="ncCi" class="form-control" readonly />
+          </label>
+          <label class="field">
+            <span>Médico</span>
+            <select id="ncMedico" class="form-control"></select>
+          </label>
+          <label class="field">
+            <span>Especialidad</span>
+            <select id="ncEsp" class="form-control"></select>
+          </label>
+          <label class="field field-full">
+            <span>Horario del médico</span>
+            <select id="ncHor" class="form-control"></select>
+          </label>
+          <label class="field">
+            <span>Fecha</span>
+            <input type="date" id="ncFecha" class="form-control" />
+          </label>
+          <label class="field">
+            <span>Hora</span>
+            <input type="time" id="ncHora" class="form-control" />
+          </label>
+          <label class="field">
+            <span>Servicio (opcional)</span>
+            <select id="ncServ" class="form-control"></select>
+          </label>
+          <label class="field field-full">
+            <span>Observación</span>
+            <textarea id="ncObs" class="form-control" rows="2" placeholder="Notas sobre la cita"></textarea>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalNuevaCita">Cancelar</button>
+        <button class="btn btn-primary" id="ncSubmit">Guardar cita</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <div class="loader" id="loader" hidden><div class="spinner"></div></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/catalogos.js"></script>
+  <script src="js/citas.js"></script>
+</body>
+</html>

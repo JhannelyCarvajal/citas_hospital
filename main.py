@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from configuracion.conexion import lifespan
 from rutas import r_especialidad, r_persona, r_empleado, r_horario, r_ficha, r_servicio, r_turno
 
@@ -28,10 +29,9 @@ app.include_router(r_ficha.router)
 app.include_router(r_servicio.router)
 app.include_router(r_turno.router)
 
-@app.get("/")
-async def root():
-    return {"message": "Módulo de Citas - API funcionando"}
-
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+# Frontend estatico (una sola pagina SPA) servido desde la raiz
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

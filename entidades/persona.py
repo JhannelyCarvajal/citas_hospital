@@ -15,6 +15,9 @@ class PersonaBase(BaseModel):
 class PersonaCreate(PersonaBase):
     pass
 
+class PersonaOut(PersonaBase):
+    id_persona: int
+
 class PersonaUpdate(BaseModel):
     nombres: Optional[str] = None
     apellidos: Optional[str] = None
