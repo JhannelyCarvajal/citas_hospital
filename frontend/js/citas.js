@@ -434,6 +434,7 @@ function irA(vista) {
   document.querySelectorAll(".view").forEach((s) => s.classList.toggle("active", s.id === `view-${vista}`));
   if (vista === "catalogos") renderCatalogos();
   if (vista === "reportes") renderReportes();
+  if (vista === "citas") renderCitas();
   if (vista === "dashboard") {
     renderResumen(document.getElementById("dashFecha").value);
     renderDashTable(document.getElementById("dashFecha").value);
