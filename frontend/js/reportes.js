@@ -23,7 +23,7 @@ function initReportes() {
   document.getElementById("repHasta").value = fechaISO(hoy);
 
   document.getElementById("btnGenerar").addEventListener("click", renderReportes);
-  document.getElementById("btnExport").addEventListener("click", exportarCSV);
+  document.getElementById("btnImprimir").addEventListener("click", imprimirReporte);
 
   document.getElementById("repDesde").addEventListener("change", () => {
     const desde = document.getElementById("repDesde").value;
@@ -114,44 +114,66 @@ function renderReportes() {
     .join("");
 }
 
-function exportarCSV() {
+function imprimirReporte() {
   const s = window.STORE;
   if (!s) return;
   const list = fichasReporte();
   if (list.length === 0) {
-    toast("No hay fichas para exportar con el filtro actual", "warning");
+    toast("No hay fichas para imprimir con el filtro actual", "warning");
     return;
   }
 
-  const escCSV = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const head = ["Nro", "Fecha", "Hora", "Paciente", "CI", "Tipo", "Medico", "Especialidad", "Estado", "Observacion"];
+  const desde = document.getElementById("repDesde").value;
+  const hasta = document.getElementById("repHasta").value;
+  const estadoLabel = document.getElementById("repEstado").selectedOptions[0].textContent;
+  const medicoLabel = document.getElementById("repMedico").selectedOptions[0].textContent;
 
-  const rows = list.map((f) => {
-    const med = s.empleadoById[f.id_medico];
-    const esp = s.espById[f.id_especialidad];
-    return [
-      f.nro_ficha,
-      f.fech_cita,
-      f.hora_cita,
-      nombreCompleto(s.personaById[f.id_persona]),
-      f.ci_paciente,
-      f.tipo_paciente,
-      nombreMedico(med),
-      esp ? esp.nombre_especialidad : f.id_especialidad,
-      f.estado,
-      f.observacion,
-    ]
-      .map(escCSV)
-      .join(",");
-  });
+  const resumen = ESTADOS.map((e) => {
+    const n = list.filter((f) => f.estado === e.key).length;
+    return `${e.label}: ${n}`;
+  }).join("  |  ");
 
-  const csv = "\uFEFF" + [head.map(escCSV).join(","), ...rows].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `reporte_fichas_${document.getElementById("repDesde").value}_a_${document.getElementById(
-    "repHasta"
-  ).value}.csv`;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  const filas = list
+    .map((f) => {
+      const med = s.empleadoById[f.id_medico];
+      const esp = s.espById[f.id_especialidad];
+      const serv = s.servById[f.id_servicio];
+      return `<tr>
+        <td>${f.nro_ficha}</td>
+        <td>${esc(fmtFechaCorta(f.fech_cita))}</td>
+        <td>${esc(fmtHora(f.hora_cita))}</td>
+        <td>${esc(nombreCompleto(s.personaById[f.id_persona]))}</td>
+        <td>${esc(f.ci_paciente)}</td>
+        <td>${esc(f.tipo_paciente)}</td>
+        <td>${esc(nombreMedico(med))}</td>
+        <td>${esc(esp ? esp.nombre_especialidad : f.id_especialidad)}</td>
+        <td>${esc(serv ? serv.nombre_servicio : "—")}</td>
+        <td>${esc(f.estado)}</td>
+        <td>${esc(f.observacion)}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const html = `
+    <div class="rep-print-head">
+      <h1>Hospital Prototipo · Módulo de Citas</h1>
+      <div class="rep-print-sub">Reporte de fichas · Generado el ${fmtFechaCorta(hoyISO())}</div>
+    </div>
+    <div class="rep-print-filtros">Periodo: ${fmtFechaCorta(desde)} – ${fmtFechaCorta(hasta)} · Estado: ${esc(
+    estadoLabel
+  )} · Médico: ${esc(medicoLabel)}</div>
+    <div class="rep-print-resumen"><b>Resumen (${list.length} fichas):</b> ${esc(resumen)}</div>
+    <table class="rep-print-table">
+      <thead>
+        <tr>
+          <th>Nº</th><th>Fecha</th><th>Hora</th><th>Paciente</th><th>CI</th><th>Tipo</th>
+          <th>Médico</th><th>Especialidad</th><th>Servicio</th><th>Estado</th><th>Observación</th>
+        </tr>
+      </thead>
+      <tbody>${filas}</tbody>
+    </table>`;
+
+  document.getElementById("printArea").innerHTML = html;
+  document.getElementById("btnImprimir").blur();
+  window.print();
 }

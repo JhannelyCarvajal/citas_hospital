@@ -473,7 +473,43 @@ body {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---------------- Impresión / PDF ---------------- */
+.print-area { display: none; }
+
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+
+  .print-area {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 16px 20px;
+    color: #000;
+    font-size: 12px;
+  }
+
+  .rep-print-head { text-align: center; margin-bottom: 4px; }
+  .rep-print-head h1 { font-size: 18px; margin: 0; }
+  .rep-print-sub { font-size: 11px; color: #333; }
+  .rep-print-filtros { text-align: center; font-size: 11px; margin: 8px 0; }
+  .rep-print-resumen { font-size: 12px; margin-bottom: 8px; }
+
+  .rep-print-table { width: 100%; border-collapse: collapse; }
+  .rep-print-table th, .rep-print-table td {
+    border: 1px solid #444;
+    padding: 3px 5px;
+    font-size: 10px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .rep-print-table thead th { background: #e6e6e6; }
+}
+
 /* ---------------- Responsive ---------------- */
+
 @media (max-width: 860px) {
   .app { grid-template-columns: 1fr; }
 
