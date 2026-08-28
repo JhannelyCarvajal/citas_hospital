@@ -417,7 +417,6 @@ async function guardarNuevaCita() {
     document.getElementById("repHasta").value = fecha;
     document.getElementById("citasFecha").value = fecha;
     await recargarYRender();
-    irA("reportes");
   } catch (e) {
     toast(`No se pudo registrar: ${esc(e.message)}`, "error");
   } finally {
