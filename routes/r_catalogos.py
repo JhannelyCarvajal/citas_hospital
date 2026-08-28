@@ -4,7 +4,6 @@ from typing import List, Optional
 from datetime import date
 
 from configuracion.conexion import get_conn
-from servicios.s_auth import usuario_actual
 from entidades.e_catalogo import (
     EspecialidadCreate, EspecialidadOut,
     PersonaCreate, PersonaOut,
@@ -41,7 +40,7 @@ async def get_especialidad(id: int, conn: Connection = Depends(get_conn)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/especialidades", response_model=EspecialidadOut)
-async def post_especialidad(esp: EspecialidadCreate, usuario: dict = Depends(usuario_actual), conn: Connection = Depends(get_conn)):
+async def post_especialidad(esp: EspecialidadCreate, conn: Connection = Depends(get_conn)):
     try:
         return await crear_especialidad(conn, esp.nombre_especialidad, esp.tipo.value, esp.descripcion)
     except Exception as e:
@@ -67,7 +66,7 @@ async def get_persona(id: int, conn: Connection = Depends(get_conn)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/personas", response_model=PersonaOut)
-async def post_persona(persona: PersonaCreate, usuario: dict = Depends(usuario_actual), conn: Connection = Depends(get_conn)):
+async def post_persona(persona: PersonaCreate, conn: Connection = Depends(get_conn)):
     try:
         return await crear_persona(
             conn, persona.ci, persona.nombres, persona.apellidos, persona.fecha_nacimiento,
@@ -96,7 +95,7 @@ async def get_empleado(id: int, conn: Connection = Depends(get_conn)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/empleados", response_model=EmpleadoOut)
-async def post_empleado(empleado: EmpleadoCreate, usuario: dict = Depends(usuario_actual), conn: Connection = Depends(get_conn)):
+async def post_empleado(empleado: EmpleadoCreate, conn: Connection = Depends(get_conn)):
     try:
         return await crear_empleado(
             conn, empleado.id_persona, empleado.id_area, empleado.tipo_empleado.value,

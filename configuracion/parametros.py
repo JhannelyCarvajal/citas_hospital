@@ -13,7 +13,5 @@ class Config(BaseSettings):
     db_pass: str
     db_host: str
     db_port: int = 5432
-    jwt_secret: str
-    jwt_expira_minutos: int = 60
 
 config = Config()

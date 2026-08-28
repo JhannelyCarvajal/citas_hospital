@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from configuracion.conexion import lifespan
 from routes.r_citas import router as citas_router
 from routes.r_catalogos import router as catalogos_router
-from routes.r_autenticacion import router as auth_router
 
 app = FastAPI(
     title="Hospital Citas API",
@@ -35,4 +34,3 @@ async def health():
 
 app.include_router(citas_router)
 app.include_router(catalogos_router)
-app.include_router(auth_router)

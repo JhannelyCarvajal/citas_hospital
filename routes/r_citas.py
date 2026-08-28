@@ -4,7 +4,6 @@ from typing import Optional
 from datetime import date
 
 from configuracion.conexion import get_conn
-from servicios.s_auth import usuario_actual
 from entidades.e_cita import (
     FichaCreate, FichaUpdate, FichaOut, HorarioDisponible,
     CotizacionIn, CotizacionOut, PagoIn,
@@ -31,7 +30,7 @@ async def get_horarios_disponibles(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/fichas")
-async def post_ficha(ficha: FichaCreate, usuario: dict = Depends(usuario_actual), conn: Connection = Depends(get_conn)):
+async def post_ficha(ficha: FichaCreate, conn: Connection = Depends(get_conn)):
     try:
         resultado = await crear_ficha(conn, ficha, ficha.usuario_reg)
         return resultado
@@ -41,7 +40,7 @@ async def post_ficha(ficha: FichaCreate, usuario: dict = Depends(usuario_actual)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/fichas/{id_ficha}/estado")
-async def put_estado_ficha(id_ficha: int, update: FichaUpdate, usuario: dict = Depends(usuario_actual), conn: Connection = Depends(get_conn)):
+async def put_estado_ficha(id_ficha: int, update: FichaUpdate, conn: Connection = Depends(get_conn)):
     try:
         resultado = await cambiar_estado_ficha(conn, id_ficha, update.estado.value, update.observacion)
         return resultado
@@ -49,7 +48,7 @@ async def put_estado_ficha(id_ficha: int, update: FichaUpdate, usuario: dict = D
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/cotizar", response_model=CotizacionOut)
-async def post_cotizar(c: CotizacionIn, usuario: dict = Depends(usuario_actual), conn: Connection = Depends(get_conn)):
+async def post_cotizar(c: CotizacionIn, conn: Connection = Depends(get_conn)):
     try:
         return await cotizar(conn, c.id_especialidad, c.id_servicio, c.monto, c.tipo_paciente.value)
     except ValueError as e:
@@ -58,7 +57,7 @@ async def post_cotizar(c: CotizacionIn, usuario: dict = Depends(usuario_actual),
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/fichas/{id_ficha}/pagar")
-async def post_pagar_ficha(id_ficha: int, pago: PagoIn, usuario: dict = Depends(usuario_actual), conn: Connection = Depends(get_conn)):
+async def post_pagar_ficha(id_ficha: int, pago: PagoIn, conn: Connection = Depends(get_conn)):
     try:
         return await pagar_ficha(conn, id_ficha, pago.metodo_pago, pago.monto, pago.observacion)
     except ValueError as e:
