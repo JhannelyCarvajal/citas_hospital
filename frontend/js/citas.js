@@ -7,7 +7,8 @@ window.STORE = null;
 const VISTAS = {
   dashboard: { titulo: "Resumen", sub: "Resumen del día" },
   citas: { titulo: "Citas", sub: "Gestión de citas médicas" },
-  catalogos: { titulo: "Catálogos", sub: "Listas de apoyo (solo lectura)" },
+  reportes: { titulo: "Reportes", sub: "Fichas por rango de fechas" },
+  catalogos: { titulo: "Listas", sub: "Todo lo que tenemos dentro del sistema" },
 };
 
 let store = null;
@@ -296,6 +297,7 @@ function irA(vista) {
   document.getElementById("pageSubtitle").textContent = info.sub;
   document.querySelectorAll(".view").forEach((s) => s.classList.toggle("active", s.id === `view-${vista}`));
   if (vista === "catalogos") renderCatalogos();
+  if (vista === "reportes") renderReportes();
   if (vista === "dashboard") {
     renderResumen(document.getElementById("dashFecha").value);
     renderDashTable(document.getElementById("dashFecha").value);
@@ -346,6 +348,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     showLoader(true);
     await loadData();
+    initReportes();
     renderResumen(hoyISO());
     renderDashTable(hoyISO());
     renderCitas();

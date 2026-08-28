@@ -93,12 +93,12 @@ body {
 .nav-item:hover { background: var(--sidebar-active); color: #fff; }
 .nav-item.active { background: var(--sidebar-active); color: #fff; font-weight: 600; }
 .nav-icon { width: 20px; text-align: center; }
+.nav-icon svg, .btn svg, .btn-icon svg { display: block; }
 
-.sidebar-footer {
-  margin-top: auto;
-  padding: 10px 8px 4px;
-  font-size: 11px;
-  color: #7e92b4;
+.brand-icon {
+  color: var(--info);
+  display: flex;
+  align-items: center;
 }
 
 /* ---------------- Main / Header ---------------- */
@@ -122,15 +122,6 @@ body {
 .header-right { display: flex; align-items: center; gap: 14px; }
 .header-date { font-size: 13px; color: var(--gray-500); }
 
-.user-chip {
-  background: var(--gray-100);
-  border: 1px solid var(--gray-200);
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 13px;
-  color: var(--gray-800);
-}
-
 /* ---------------- Layout de vistas ---------------- */
 .content { padding: 22px 28px 40px; }
 
@@ -145,6 +136,15 @@ body {
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
+
+.filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filtros .btn { align-self: flex-end; }
 
 .field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--gray-700); }
 .field-inline { flex-direction: row; align-items: center; gap: 8px; }
@@ -441,7 +441,6 @@ body {
   }
 
   .brand { border-bottom: 0; margin-bottom: 0; padding: 0; margin-right: 8px; }
-  .sidebar-footer { display: none; }
 
   .nav { flex-direction: row; flex-wrap: wrap; }
   .nav-item { padding: 8px 10px; }

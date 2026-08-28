@@ -10,7 +10,9 @@
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
-        <span class="brand-icon">🏥</span>
+        <span class="brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.48 12H2"/></svg>
+        </span>
         <div class="brand-text">
           <strong>Hospital Prototipo</strong>
           <span>Módulo de Citas</span>
@@ -19,17 +21,18 @@
 
       <nav class="nav">
         <button class="nav-item active" data-view="dashboard">
-          <span class="nav-icon">📋</span> Resumen
+          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 .72-1.53l7-6a2 2 0 0 1 2.56 0l7 6A2 2 0 0 1 21 9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/></svg></span> Resumen
         </button>
         <button class="nav-item" data-view="citas">
-          <span class="nav-icon">🗓️</span> Citas
+          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></span> Citas
+        </button>
+        <button class="nav-item" data-view="reportes">
+          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span> Reportes
         </button>
         <button class="nav-item" data-view="catalogos">
-          <span class="nav-icon">⚙️</span> Catálogos
+          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span> Listas
         </button>
       </nav>
-
-      <div class="sidebar-footer">Módulo académico · TECWEB II</div>
     </aside>
 
     <div class="main">
@@ -40,7 +43,6 @@
         </div>
         <div class="header-right">
           <span class="header-date" id="headerDate"></span>
-          <span class="user-chip">👤 Admin</span>
         </div>
       </header>
 
@@ -86,7 +88,10 @@
               <span>Fecha</span>
               <input type="date" id="citasFecha" class="form-control" />
             </label>
-            <button class="btn btn-primary" id="btnNuevaCita">+ Nueva cita</button>
+            <button class="btn btn-primary" id="btnNuevaCita">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Nueva cita
+            </button>
           </div>
 
           <div class="card">
@@ -95,7 +100,9 @@
               <span class="muted">Total: <b id="citasTotal">0</b></span>
             </div>
             <div id="emptyCitas" class="empty-state" hidden>
-              <div class="empty-icon">🗓️</div>
+              <div class="empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m14 14-4 4"/><path d="m10 14 4 4"/></svg>
+              </div>
               <p>No hay citas para esta fecha.</p>
               <button class="btn btn-primary btn-sm" id="btnNuevaCitaEmpty">Registrar la primera cita</button>
             </div>
@@ -119,11 +126,56 @@
           </div>
         </section>
 
-        <!-- ==================== CATÁLOGOS ==================== -->
+        <!-- ==================== REPORTES ==================== -->
+        <section id="view-reportes" class="view">
+          <div class="card">
+            <div class="card-header"><h3>Filtros del reporte</h3></div>
+            <div class="filtros">
+              <label class="field"><span>Desde</span><input type="date" id="repDesde" class="form-control" /></label>
+              <label class="field"><span>Hasta</span><input type="date" id="repHasta" class="form-control" /></label>
+              <label class="field"><span>Estado</span><select id="repEstado" class="form-control"></select></label>
+              <label class="field"><span>Médico</span><select id="repMedico" class="form-control"></select></label>
+              <button class="btn btn-primary" id="btnGenerar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                Filtrar
+              </button>
+            </div>
+          </div>
+
+          <div class="cards" id="repResumen"></div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Fichas del periodo <small id="repCount"></small></h3>
+              <button class="btn btn-outline btn-sm" id="btnExport">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+                Exportar CSV
+              </button>
+            </div>
+            <div id="emptyRep" class="empty-state" hidden>
+              <div class="empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m14 14-4 4"/><path d="m10 14 4 4"/></svg>
+              </div>
+              <p>Sin fichas en el periodo seleccionado.</p>
+            </div>
+            <div class="table-wrap" id="wrapRep">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>#</th><th>Fecha</th><th>Hora</th><th>Paciente</th><th>CI</th><th>Médico</th><th>Especialidad</th><th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="repTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== LISTAS ==================== -->
         <section id="view-catalogos" class="view">
           <div class="card">
-            <div class="card-header"><h3>Catálogos de apoyo</h3></div>
-            <p class="muted">Listas de referencia usadas al registrar citas (solo lectura).</p>
+            <div class="card-header"><h3>Listas de apoyo</h3></div>
+            <p class="muted">Todo lo que tenemos dentro del sistema, para consultarlo al registrar citas.</p>
           </div>
           <div id="catalogoGrid"></div>
         </section>
@@ -136,7 +188,9 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Registrar nueva cita</h3>
-        <button class="btn-icon" data-close-modal="modalNuevaCita" aria-label="Cerrar">✕</button>
+        <button class="btn-icon" data-close-modal="modalNuevaCita" aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
       </div>
       <div class="modal-body">
         <div class="form-grid">
@@ -191,6 +245,7 @@
   <script src="js/api.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/catalogos.js"></script>
+  <script src="js/reportes.js"></script>
   <script src="js/citas.js"></script>
 </body>
 </html>
