@@ -242,6 +242,23 @@ body {
 }
 .check-row input { accent-color: var(--primary); cursor: pointer; }
 
+.eme-titulo {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600, #495057);
+  margin-bottom: 8px;
+}
+.eme-vitales {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px 14px;
+}
+
 /* ---------------- Cards ---------------- */
 .cards {
   display: grid;
@@ -350,9 +367,12 @@ body {
 }
 
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }
-
 .btn-primary { background: var(--primary); color: #fff; }
+
 .btn-primary:hover { background: var(--primary-dark); }
+
+.btn-info { background: var(--info); color: #06324a; }
+.btn-info:hover { filter: brightness(0.95); }
 
 .btn-success { background: var(--success); color: #fff; }
 .btn-success:hover { background: var(--success-dark); }

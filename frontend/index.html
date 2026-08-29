@@ -29,6 +29,9 @@
         <button class="nav-item" data-view="reportes">
           <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span> Reportes
         </button>
+        <button class="nav-item" data-view="emergencias">
+          <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M12 2v1"/><path d="M2 12h1"/><path d="m4.929 4.929.707.707"/><path d="M12 12v6"/></svg></span> Emergencias
+        </button>
         <button class="nav-item" data-view="catalogos">
           <span class="nav-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span> Listas
         </button>
@@ -171,6 +174,59 @@
           </div>
         </section>
 
+        <!-- ==================== EMERGENCIAS ==================== -->
+        <section id="view-emergencias" class="view">
+          <div class="card">
+            <div class="card-header">
+              <h3>Filtros de emergencias</h3>
+              <button class="btn btn-primary btn-sm" id="btnNuevaEmergencia">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                Nueva emergencia
+              </button>
+            </div>
+            <div class="filtros">
+              <label class="field"><span>Desde</span><input type="date" id="emeDesde" class="form-control" /></label>
+              <label class="field"><span>Hasta</span><input type="date" id="emeHasta" class="form-control" /></label>
+              <label class="field"><span>Tipo de ingreso</span><select id="emeTipoF" class="form-control"></select></label>
+              <label class="field"><span>Prioridad</span><select id="emePriF" class="form-control"></select></label>
+              <label class="field"><span>Estado</span><select id="emeEstadoF" class="form-control"></select></label>
+              <label class="field"><span>Médico</span><select id="emeMedicoF" class="form-control"></select></label>
+              <button class="btn btn-primary" id="btnEmeFiltrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                Filtrar
+              </button>
+            </div>
+          </div>
+
+          <div class="cards" id="emeResumen"></div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Atendidos en el periodo <small id="emeCount"></small></h3>
+              <button class="btn btn-outline btn-sm" id="btnEmeImprimir">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+                Imprimir · PDF
+              </button>
+            </div>
+            <div id="emptyEme" class="empty-state" hidden>
+              <div class="empty-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18v-6a5 5 0 1 1 10 0v6"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/></svg>
+              </div>
+              <p>Sin emergencias en el periodo seleccionado.</p>
+            </div>
+            <div class="table-wrap" id="wrapEme">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>#</th><th>Fecha</th><th>Hora</th><th>Paciente</th><th>CI</th><th>Cobertura</th><th>Tipo ingreso</th><th>Prioridad</th><th>Médico</th><th>Registró</th><th>Estado</th><th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="emeTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <!-- ==================== LISTAS ==================== -->
         <section id="view-catalogos" class="view">
           <div id="catalogoGrid"></div>
@@ -259,6 +315,94 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL: NUEVA EMERGENCIA ==================== -->
+  <div class="modal-backdrop" id="modalEmergencia" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Registrar nueva emergencia</h3>
+        <button class="btn-icon" data-close-modal="modalEmergencia" aria-label="Cerrar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <label class="field field-full">
+            <span>Buscar paciente por CI</span>
+            <div class="buscar-row">
+              <input type="text" id="emeCiBus" class="form-control" placeholder="Escribe el CI del paciente…" autocomplete="off" />
+              <button type="button" class="btn btn-outline" id="btnBuscarPacEme">Buscar</button>
+            </div>
+          </label>
+
+          <div class="field field-full">
+            <div class="pac-info" id="emePacInfo" hidden>
+              <div class="pac-info-top">
+                <strong id="emePacNombre"></strong>
+                <span class="badge badge-gray" id="emePacAseg">Particular</span>
+              </div>
+              <div class="pac-info-grid">
+                <div><span>CI</span><b id="emePacCi"></b></div>
+                <div><span>Nacimiento</span><b id="emePacNac"></b></div>
+                <div><span>Teléfono</span><b id="emePacTel"></b></div>
+                <div><span>Email</span><b id="emePacMail"></b></div>
+              </div>
+              <div class="pac-alert" id="emePacAlert" hidden></div>
+              <div class="pac-vence" id="emePacVence" hidden></div>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>Médico</span>
+            <select id="emeMedico" class="form-control"></select>
+          </label>
+          <label class="field">
+            <span>Registrado por</span>
+            <select id="emeEnfermero" class="form-control"></select>
+          </label>
+          <label class="field">
+            <span>Tipo de ingreso</span>
+            <select id="emeTipo" class="form-control"></select>
+          </label>
+          <label class="field">
+            <span>Prioridad</span>
+            <select id="emePri" class="form-control"></select>
+          </label>
+          <label class="field">
+            <span>Estado</span>
+            <select id="emeEstado" class="form-control"></select>
+          </label>
+          <label class="field">
+            <span>Fecha</span>
+            <input type="date" id="emeFecha" class="form-control" />
+          </label>
+          <label class="field">
+            <span>Hora</span>
+            <input type="time" id="emeHora" class="form-control" />
+          </label>
+
+          <div class="field field-full">
+            <span class="eme-titulo">Signos vitales (triaje)</span>
+            <div class="eme-vitales">
+              <label class="field"><span>Presión sistólica (mmHg)</span><input type="number" id="emePas" class="form-control" min="40" max="280" placeholder="120" /></label>
+              <label class="field"><span>Presión diastólica (mmHg)</span><input type="number" id="emePad" class="form-control" min="20" max="180" placeholder="80" /></label>
+              <label class="field"><span>Frecuencia cardíaca (lpm)</span><input type="number" id="emeFC" class="form-control" min="30" max="220" placeholder="80" /></label>
+              <label class="field"><span>Frecuencia respiratoria (rpm)</span><input type="number" id="emeFR" class="form-control" min="8" max="60" placeholder="16" /></label>
+              <label class="field"><span>Saturación de oxígeno (%)</span><input type="number" id="emeO2" class="form-control" min="30" max="100" placeholder="97" /></label>
+              <label class="field"><span>Temperatura (°C)</span><input type="number" id="emeTemp" class="form-control" min="34" max="43" step="0.1" placeholder="36.5" /></label>
+              <label class="field"><span>Escala de Glasgow</span><input type="number" id="emeGlasgow" class="form-control" min="3" max="15" placeholder="15" /></label>
+              <label class="field"><span>Nivel de dolor (0-10)</span><input type="number" id="emeDolor" class="form-control" min="0" max="10" placeholder="0" /></label>
+              <label class="field"><span>Tiempo de espera máximo (min)</span><input type="number" id="emeEspera" class="form-control" min="0" placeholder="0" /></label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" data-close-modal="modalEmergencia">Cancelar</button>
+        <button class="btn btn-primary" id="emeSubmit">Guardar emergencia</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-container" id="toastContainer"></div>
   <div class="loader" id="loader" hidden><div class="spinner"></div></div>
   <div class="print-area" id="printArea"></div>
@@ -267,6 +411,7 @@
   <script src="js/ui.js"></script>
   <script src="js/catalogos.js"></script>
   <script src="js/reportes.js"></script>
+  <script src="js/emergencias.js"></script>
   <script src="js/citas.js"></script>
 </body>
 </html>

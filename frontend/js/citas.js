@@ -8,6 +8,7 @@ const VISTAS = {
   dashboard: { titulo: "Resumen", sub: "Resumen del día" },
   citas: { titulo: "Citas", sub: "Gestión de citas médicas" },
   reportes: { titulo: "Reportes", sub: "Fichas por rango de fechas" },
+  emergencias: { titulo: "Emergencias", sub: "Atenciones y triaje de emergencia" },
   catalogos: { titulo: "Listas", sub: "Todo lo que tenemos dentro del sistema" },
 };
 
@@ -35,7 +36,7 @@ function esPersonaMedico(idPersona) {
 /* ---------- Carga de datos ---------- */
 
 async function loadData() {
-  const [personas, empleados, fichas, especialidades, horarios, servicios, turnos] = await Promise.all([
+  const [personas, empleados, fichas, especialidades, horarios, servicios, turnos, emergencias] = await Promise.all([
     apiGet("/personas/"),
     apiGet("/empleados/"),
     apiGet("/fichas/"),
@@ -43,6 +44,7 @@ async function loadData() {
     apiGet("/horarios/"),
     apiGet("/servicios/"),
     apiGet("/turnos/"),
+    apiGet("/emergencias/"),
   ]);
 
   store = {
@@ -53,6 +55,7 @@ async function loadData() {
     horarios,
     servicios,
     turnos,
+    emergencias,
     personaById: {},
     empleadoById: {},
     espById: {},
@@ -467,6 +470,7 @@ function irA(vista) {
   document.querySelectorAll(".view").forEach((s) => s.classList.toggle("active", s.id === `view-${vista}`));
   if (vista === "catalogos") renderCatalogos();
   if (vista === "reportes") renderReportes();
+  if (vista === "emergencias") renderEmergencias();
   if (vista === "citas") renderCitas();
   if (vista === "dashboard") {
     renderResumen(document.getElementById("dashFecha").value);
@@ -527,9 +531,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     showLoader(true);
     await loadData();
     initReportes();
+    initEmergencias();
     renderResumen(hoyISO());
     renderDashTable(hoyISO());
     renderCitas();
+    renderEmergencias();
   } catch (e) {
     toast(`Error cargando datos: ${esc(e.message)}`, "error");
   } finally {
