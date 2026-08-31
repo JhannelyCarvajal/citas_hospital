@@ -34,7 +34,6 @@ class EmergenciaCreate(BaseModel):
     id_medico: int
     id_enfermero: int
     tipo_ingreso: str = "Urgencias"
-    estado: str = "Admisión"
     prioridad_color: str
     fecha: Optional[date] = None
     hora: Optional[str] = None
@@ -50,4 +49,3 @@ class EmergenciaCreate(BaseModel):
 
 class EmergenciaUpdate(BaseModel):
     estado: Optional[str] = None
-    fecha_cierre: Optional[datetime] = None

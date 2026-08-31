@@ -11,6 +11,10 @@ router = APIRouter(prefix="/especialidades", tags=["Especialidades"])
 async def get_all(conn: Connection = Depends(get_conn)):
     return await m_especialidad.get_all(conn)
 
+@router.get("/medicos")
+async def get_medicos_por_especialidad(conn: Connection = Depends(get_conn)):
+    return await m_especialidad.medicos_por_especialidad(conn)
+
 @router.get("/{id}", response_model=EspecialidadBase)
 async def get_by_id(id: int, conn: Connection = Depends(get_conn)):
     row = await m_especialidad.get_by_id(conn, id)

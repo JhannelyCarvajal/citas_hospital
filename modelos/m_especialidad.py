@@ -47,3 +47,13 @@ async def update(conn: Connection, id_especialidad: int, data: dict) -> Optional
 async def delete(conn: Connection, id_especialidad: int) -> bool:
     result = await conn.execute("DELETE FROM tp_especialidades WHERE id_especialidad = $1", id_especialidad)
     return result != "DELETE 0"
+
+async def medicos_por_especialidad(conn: Connection) -> List[dict]:
+    rows = await conn.fetch(
+        """SELECT ee.id_especialidad, ee.id_empleado
+           FROM tp_empleado_especialidades ee
+           JOIN tp_empleados e ON e.id_empleado = ee.id_empleado
+           WHERE LOWER(e.tipo_empleado) = 'medico' AND e.activo IS NOT FALSE
+           ORDER BY ee.id_especialidad, ee.id_empleado"""
+    )
+    return [dict(r) for r in rows]

@@ -7,6 +7,7 @@ class HorarioBase(BaseModel):
     id_empleado: int
     dia_semana: int  # 1=Lunes, ..., 7=Domingo
     id_turno: int
+    id_especialidad: int
     hora_inicio: time
     hora_fin: time
     nro_fichas: int = 5
@@ -19,6 +20,7 @@ class HorarioUpdate(BaseModel):
     id_empleado: Optional[int] = None
     dia_semana: Optional[int] = None
     id_turno: Optional[int] = None
+    id_especialidad: Optional[int] = None
     hora_inicio: Optional[time] = None
     hora_fin: Optional[time] = None
     nro_fichas: Optional[int] = None

@@ -36,7 +36,7 @@ function esPersonaMedico(idPersona) {
 /* ---------- Carga de datos ---------- */
 
 async function loadData() {
-  const [personas, empleados, fichas, especialidades, horarios, servicios, turnos, emergencias] = await Promise.all([
+  const [personas, empleados, fichas, especialidades, horarios, servicios, turnos, emergencias, espMedicosRel] = await Promise.all([
     apiGet("/personas/"),
     apiGet("/empleados/"),
     apiGet("/fichas/"),
@@ -45,6 +45,7 @@ async function loadData() {
     apiGet("/servicios/"),
     apiGet("/turnos/"),
     apiGet("/emergencias/"),
+    apiGet("/especialidades/medicos"),
   ]);
 
   store = {
@@ -56,6 +57,7 @@ async function loadData() {
     servicios,
     turnos,
     emergencias,
+    espMedicos: {},
     personaById: {},
     empleadoById: {},
     espById: {},
@@ -74,6 +76,11 @@ async function loadData() {
   (turnos || []).forEach((t) => (store.turnoById[t.id_turno] = t));
   (fichas || []).forEach((f) => (store.fichaById[f.id_ficha] = f));
 
+  (espMedicosRel || []).forEach((r) => {
+    if (!store.espMedicos[r.id_especialidad]) store.espMedicos[r.id_especialidad] = [];
+    store.espMedicos[r.id_especialidad].push(r.id_empleado);
+  });
+
   store.medList = (empleados || []).filter((e) => (e.tipo_empleado || "").toLowerCase() === "medico");
 
   window.STORE = store;
@@ -85,8 +92,10 @@ function fichasDeFecha(fecha) {
     .sort((a, b) => String(a.hora_cita).localeCompare(String(b.hora_cita)) || (a.nro_ficha - b.nro_ficha));
 }
 
-function fichasMedicoDia(medId, fecha) {
-  return (store.fichas || []).filter((f) => f.id_medico === medId && f.fech_cita === fecha);
+function fichasHorarioDia(horId, fecha) {
+  return (store.fichas || []).filter(
+    (f) => f.id_horario === horId && f.fech_cita === fecha && f.estado !== "Cancelada"
+  );
 }
 
 /* ---------- Resumen / Dashboard ---------- */
@@ -228,12 +237,8 @@ function abrirNuevaCita() {
   document.getElementById("ncComoBox").hidden = true;
   document.getElementById("ncComoParticular").checked = false;
 
-  llenarSelect(
-    "ncMedico",
-    store.medList.map((e) => [e.id_empleado, `${nombreMedico(e)} (${e.nmp || "sin NMP"})`.trim()]),
-    ""
-  );
-  llenarSelect("ncEsp", store.especialidades.map((e) => [e.id_especialidad, e.nombre_especialidad]), "");
+  llenarSelect("ncMedico", [], "Selecciona una especialidad primero");
+  llenarSelect("ncEsp", store.especialidades.map((e) => [e.id_especialidad, e.nombre_especialidad]), "Selecciona la especialidad");
   llenarSelect("ncServ", store.servicios.map((s) => [s.id_servicio, s.nombre_servicio]), "");
 
   document.getElementById("ncFecha").value = hoyISO();
@@ -247,14 +252,30 @@ function abrirNuevaCita() {
 
 function horarioTexto(h) {
   const t = store.turnoById[h.id_turno];
+  const esp = store.espById[h.id_especialidad];
   return `${procesarDiaSemana(h.dia_semana)} · ${fmtHora(h.hora_inicio)}–${fmtHora(h.hora_fin)} · ${
     t ? t.nombre_turno : "turno " + h.id_turno
-  }`;
+  }${esp ? " · " + esp.nombre_especialidad : ""}`;
+}
+
+function fillMedicosPorEsp() {
+  const espId = Number(document.getElementById("ncEsp").value || 0);
+  const ids = (espId && store.espMedicos[espId]) || [];
+  const opciones = store.medList.filter((e) => ids.includes(e.id_empleado));
+  llenarSelect(
+    "ncMedico",
+    opciones.map((e) => [e.id_empleado, `${nombreMedico(e)} (${e.nmp || "sin NMP"})`.trim()]),
+    espId ? "Selecciona el médico" : "Selecciona una especialidad primero"
+  );
+  fillHorarios();
 }
 
 function fillHorarios() {
   const medId = Number(document.getElementById("ncMedico").value || 0);
-  const filtrados = (store.horarios || []).filter((h) => h.id_empleado === medId && h.activo !== false);
+  const espId = Number(document.getElementById("ncEsp").value || 0);
+  const filtrados = (store.horarios || []).filter(
+    (h) => h.id_empleado === medId && (!espId || h.id_especialidad === espId) && h.activo !== false
+  );
   llenarSelect("ncHor", filtrados.map((h) => [h.id_horario, horarioTexto(h)]), "");
   recalcularCita(true);
 }
@@ -372,8 +393,7 @@ function recalcularCita(resetFecha = true) {
   }
   fechaSugerida = fecha;
 
-  const usadas = fichasMedicoDia(medId, fecha).length;
-  const cupoTotal = usadas + 1;
+  const usadas = fichasHorarioDia(horId, fecha).length;
   const lleno = usadas >= hor.nro_fichas;
 
   const turno = (store.turnoById[hor.id_turno] || {}).nombre_turno || "";
@@ -382,8 +402,8 @@ function recalcularCita(resetFecha = true) {
   }`;
 
   infoHor.textContent = lleno
-    ? `${base} · ficha ${cupoTotal} de ${hor.nro_fichas} — horario lleno`
-    : `Ficha ${cupoTotal} de ${hor.nro_fichas} — ${base}`;
+    ? `${base} · cupos ${usadas}/${hor.nro_fichas} — sin cupo, elige otra fecha o médico`
+    : `${base} · cupos ${usadas + 1}/${hor.nro_fichas}`;
   if (lleno) infoHor.classList.add("hint-danger");
 
   if (lleno) {
@@ -518,6 +538,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       buscarPaciente();
     }
   });
+  document.getElementById("ncEsp").addEventListener("change", fillMedicosPorEsp);
   document.getElementById("ncMedico").addEventListener("change", fillHorarios);
   document.getElementById("ncHor").addEventListener("change", () => recalcularCita(true));
   document.getElementById("ncServ").addEventListener("change", () => recalcularCita(false));

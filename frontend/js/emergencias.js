@@ -170,7 +170,6 @@ function abrirNuevaEmergencia() {
   );
   llenarSel("emeTipo", EMER_TIPOS.map((t) => [t, t]), "");
   llenarSel("emePri", EMER_PRIORIDADES.map((p) => [p.key, p.label]), "Selecciona la prioridad");
-  llenarSel("emeEstado", EMER_ESTADOS.map((s) => [s.key, s.label]), "");
 
   const ahora = new Date();
   document.getElementById("emeFecha").value = hoyISO();
@@ -299,7 +298,6 @@ async function guardarNuevaEmergencia() {
     id_medico: medico,
     id_enfermero: enfermero,
     tipo_ingreso: document.getElementById("emeTipo").value || "Urgencias",
-    estado: document.getElementById("emeEstado").value || "Admisión",
     prioridad_color: prioridad,
     fecha,
     hora,
@@ -371,9 +369,66 @@ function imprimirEmergencias() {
   window.print();
 }
 
+/* ---------- Descargar Excel (con previsualización) ---------- */
+
+function exportarEmergenciasExcel() {
+  const list = emerFiltrados();
+  if (list.length === 0) {
+    toast("No hay emergencias para exportar con el filtro actual", "warning");
+    return;
+  }
+
+  const dia = document.getElementById("emeDesde").value;
+  const hasta = document.getElementById("emeHasta").value;
+
+  const columnas = [
+    { label: "N°", type: "number" },
+    { label: "Fecha" },
+    { label: "Hora" },
+    { label: "Paciente" },
+    { label: "CI" },
+    { label: "Cobertura" },
+    { label: "Tipo ingreso" },
+    { label: "Prioridad" },
+    { label: "Médico" },
+    { label: "Registró" },
+    { label: "Estado" },
+  ];
+
+  const filas = list.map((e) => [
+    e.id,
+    emeFecha(e.fecha_apertura),
+    emeHora(e.fecha_apertura),
+    e.paciente,
+    e.ci_paciente,
+    e.tipo_seguro,
+    e.tipo_ingreso,
+    e.prioridad_color,
+    e.medico,
+    e.registrado_por,
+    e.estado,
+  ]);
+
+  abrirPrevisualizacionExcel({
+    titulo: "Reporte de emergencias",
+    info: `Periodo ${fmtFechaCorta(dia)} – ${fmtFechaCorta(hasta)}`,
+    nombreArchivo: `emergencias_${dia}_a_${hasta}`,
+    nombreHoja: "Emergencias",
+    columnas,
+    filas,
+  });
+}
+
 /* ---------- Init ---------- */
 
 function initEmergencias() {
+  const filtrosPrev = {
+    emeTipoF: document.getElementById("emeTipoF").value,
+    emePriF: document.getElementById("emePriF").value,
+    emeEstadoF: document.getElementById("emeEstadoF").value,
+    emeMedicoF: document.getElementById("emeMedicoF").value,
+  };
+
   llenarSel("emeTipoF", [["", "Todos"]].concat(EMER_TIPOS.map((t) => [t, t])), "");
   llenarSel("emePriF", [["", "Todas"]].concat(EMER_PRIORIDADES.map((p) => [p.key, p.label])), "");
   llenarSel("emeEstadoF", [["", "Todos"]].concat(EMER_ESTADOS.map((s) => [s.key, s.label])), "");
@@ -382,6 +437,12 @@ function initEmergencias() {
     store.medList.map((e) => [e.id_empleado, empreoNombre(e)]),
     "Todos"
   );
+
+  if (filtrosPrev.emeTipoF) document.getElementById("emeTipoF").value = filtrosPrev.emeTipoF;
+  if (filtrosPrev.emePriF) document.getElementById("emePriF").value = filtrosPrev.emePriF;
+  if (filtrosPrev.emeEstadoF) document.getElementById("emeEstadoF").value = filtrosPrev.emeEstadoF;
+  if (filtrosPrev.emeMedicoF) document.getElementById("emeMedicoF").value = filtrosPrev.emeMedicoF;
+
   fillFechaInput("emeDesde", hoyISO());
   fillFechaInput("emeHasta", hoyISO());
 
@@ -401,6 +462,7 @@ function initEmergencias() {
       document.getElementById(id).addEventListener("change", renderEmergencias)
     );
     document.getElementById("btnEmeImprimir").addEventListener("click", imprimirEmergencias);
+    document.getElementById("btnEmeExcel").addEventListener("click", exportarEmergenciasExcel);
     document.getElementById("emeTbody").addEventListener("click", (ev) => {
       const btn = ev.target.closest("button[data-em-id]");
       if (btn) cambiarEstadoEmergencia(Number(btn.dataset.emId), btn.dataset.emEstado);

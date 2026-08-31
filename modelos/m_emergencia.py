@@ -131,11 +131,10 @@ async def create(conn: Connection, data: dict) -> dict:
         trazabilidad = "EM-" + datetime.now().strftime("%Y%m%d%H%M%S")
         atencion = await conn.fetchrow(
             """INSERT INTO ta_atenciones_medicas (medico_id, id_trazabilidad, tipo_ingreso, estado, fecha_apertura, paciente_id)
-               VALUES ($1, $2, $3, $4, $5, $6) RETURNING id""",
+               VALUES ($1, $2, $3, 'Admisión', $4, $5) RETURNING id""",
             data['id_medico'],
             trazabilidad,
             data.get('tipo_ingreso', 'Urgencias'),
-            data.get('estado', 'Admisión'),
             apertura,
             paciente['id'],
         )

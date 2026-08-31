@@ -24,6 +24,7 @@ function initReportes() {
 
   document.getElementById("btnGenerar").addEventListener("click", renderReportes);
   document.getElementById("btnImprimir").addEventListener("click", imprimirReporte);
+  document.getElementById("btnRepExcel").addEventListener("click", exportarFichasExcel);
 
   document.getElementById("repDesde").addEventListener("change", () => {
     const desde = document.getElementById("repDesde").value;
@@ -176,4 +177,63 @@ function imprimirReporte() {
   document.getElementById("printArea").innerHTML = html;
   document.getElementById("btnImprimir").blur();
   window.print();
+}
+
+/* ---------- Descargar Excel (con previsualización) ---------- */
+
+function exportarFichasExcel() {
+  const s = window.STORE;
+  if (!s) return;
+  const list = fichasReporte();
+  if (list.length === 0) {
+    toast("No hay fichas para exportar con el filtro actual", "warning");
+    return;
+  }
+
+  const desde = document.getElementById("repDesde").value;
+  const hasta = document.getElementById("repHasta").value;
+  const estadoLabel = document.getElementById("repEstado").selectedOptions[0].textContent;
+  const medicoLabel = document.getElementById("repMedico").selectedOptions[0].textContent;
+
+  const columnas = [
+    { label: "Nº", type: "number" },
+    { label: "Fecha" },
+    { label: "Hora" },
+    { label: "Paciente" },
+    { label: "CI" },
+    { label: "Tipo" },
+    { label: "Médico" },
+    { label: "Especialidad" },
+    { label: "Servicio" },
+    { label: "Estado" },
+    { label: "Observación" },
+  ];
+
+  const filas = list.map((f) => {
+    const med = s.empleadoById[f.id_medico];
+    const esp = s.espById[f.id_especialidad];
+    const serv = s.servById[f.id_servicio];
+    return [
+      f.nro_ficha,
+      fmtFechaCorta(f.fech_cita),
+      fmtHora(f.hora_cita),
+      nombreCompleto(s.personaById[f.id_persona]),
+      f.ci_paciente,
+      f.tipo_paciente,
+      nombreMedico(med),
+      esp ? esp.nombre_especialidad : f.id_especialidad,
+      serv ? serv.nombre_servicio : "—",
+      f.estado,
+      f.observacion,
+    ];
+  });
+
+  abrirPrevisualizacionExcel({
+    titulo: "Reporte de fichas",
+    info: `Periodo ${fmtFechaCorta(desde)} – ${fmtFechaCorta(hasta)} · Estado: ${estadoLabel} · Médico: ${medicoLabel}`,
+    nombreArchivo: `reporte_fichas_${desde}_a_${hasta}`,
+    nombreHoja: "Fichas",
+    columnas,
+    filas,
+  });
 }

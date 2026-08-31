@@ -547,6 +547,26 @@ body {
     white-space: nowrap;
   }
   .rep-print-table thead th { background: #e6e6e6; }
+
+  /* Impresión del módulo de emergencias */
+  .rep-titulo { text-align: center; font-size: 16px; margin: 0 0 4px; }
+  .rep-sub { text-align: center; font-size: 11px; color: #333; margin: 0 0 8px; }
+
+  .rep-tabla { width: 100%; border-collapse: collapse; }
+  .rep-tabla th, .rep-tabla td {
+    border: 1px solid #444;
+    padding: 3px 5px;
+    font-size: 10px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .rep-tabla thead th { background: #e6e6e6; }
+
+  .rep-pri { font-weight: 700; }
+  .rep-rojo { color: #b91c1c; }
+  .rep-naranja { color: #c2410c; }
+  .rep-amarillo { color: #a16207; }
+  .rep-verde { color: #15803d; }
 }
 
 /* ---------------- Responsive ---------------- */
@@ -572,4 +592,20 @@ body {
   .content { padding: 16px; }
   .header { padding: 14px 16px; }
   .form-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------------- Previsualización Excel ---------------- */
+.modal-excel {
+  max-width: 900px;
+  width: 92vw;
+}
+.table-compact th,
+.table-compact td {
+  padding: 5px 8px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.modal-excel .table-wrap {
+  max-height: 55vh;
+  overflow: auto;
 }

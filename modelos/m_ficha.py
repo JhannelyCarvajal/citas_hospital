@@ -50,14 +50,24 @@ async def create(conn: Connection, data: dict) -> dict:
         tipo_paciente = "Particular"
         id_asegurado = None
 
-    # 4) Horario: debe existir, la fecha debe corresponder al dia de la semana,
-    #    la hora debe estar dentro del rango y debe haber cupo disponible
+    # 4) Coherencia medico <-> especialidad <-> horario:
+    #    el medico debe atender esa especialidad y el horario elegido debe
+    #    ser de esa misma especialidad.
+    atiende = await conn.fetchval(
+        "SELECT 1 FROM tp_empleado_especialidades WHERE id_empleado = $1 AND id_especialidad = $2",
+        data['id_medico'], data['id_especialidad']
+    )
+    if not atiende:
+        raise ValueError("El medico no atiende la especialidad seleccionada")
+
     horario = await conn.fetchrow(
-        "SELECT dia_semana, hora_inicio, hora_fin, nro_fichas FROM tc_horario WHERE id_horario = $1",
+        "SELECT dia_semana, hora_inicio, hora_fin, nro_fichas, id_especialidad FROM tc_horario WHERE id_horario = $1",
         data['id_horario']
     )
     if not horario:
         raise ValueError("El horario no existe")
+    if horario['id_especialidad'] != data['id_especialidad']:
+        raise ValueError("El horario elegido corresponde a otra especialidad del medico")
 
     fech_cita = data['fech_cita']
     if fech_cita.isoweekday() != horario['dia_semana']:
@@ -74,9 +84,16 @@ async def create(conn: Connection, data: dict) -> dict:
     if not dentro:
         raise ValueError("La hora de la cita no esta dentro del horario del medico")
 
+    repetida = await conn.fetchval(
+        "SELECT 1 FROM tc_ficha WHERE id_medico = $1 AND fech_cita = $2 AND hora_cita = $3 AND estado <> 'Cancelada'",
+        data['id_medico'], fech_cita, hora_cita
+    )
+    if repetida:
+        raise ValueError("El medico ya tiene una cita a esa hora en esa fecha")
+
     ocupadas = await conn.fetchval(
-        "SELECT COUNT(*) FROM tc_ficha WHERE id_medico = $1 AND fech_cita = $2",
-        data['id_medico'], fech_cita
+        "SELECT COUNT(*) FROM tc_ficha WHERE id_horario = $1 AND fech_cita = $2 AND estado <> 'Cancelada'",
+        data['id_horario'], fech_cita
     )
     if ocupadas >= horario['nro_fichas']:
         raise ValueError(f"El medico ya alcanzo el limite de {horario['nro_fichas']} fichas para ese dia")
