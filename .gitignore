@@ -11,3 +11,7 @@ wheels/
 
 # Secrets
 .env
+
+# Repositorio compartido de BD (hospital-todo-sano) anidado
+# Se gestiona por separado con GitHub Desktop; no debe trackearse dentro de citas.
+hospital-todo-sano/

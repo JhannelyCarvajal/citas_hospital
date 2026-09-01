@@ -11,7 +11,9 @@ Este modulo permite gestionar el ciclo de vida de las fichas de citas medicas, i
 - Atencion de pacientes
 - Cancelacion de citas
 - Visualizacion de horarios disponibles
-- Reportes basicos
+- Reportes (vista imprimible/PDF)
+- Emergencias y triaje
+- Catalogos (listas)
 
 ## Tecnologias Utilizadas
 
@@ -19,54 +21,73 @@ Este modulo permite gestionar el ciclo de vida de las fichas de citas medicas, i
 - **Python 3.x**
 - **FastAPI** - Framework web moderno y rapido
 - **asyncpg** - Cliente asincrono para PostgreSQL
-- **PostgreSQL 18** - Sistema de gestion de bases de datos
+- **pydantic-settings** - Configuracion de entorno
+- **PostgreSQL** - Sistema de gestion de bases de datos
 
 ### Frontend
 - **HTML5** - Estructura de paginas
-- **CSS3** - Estilos y diseno responsivo
-- **JavaScript (ES6+)** - Logica del cliente
-
-### Herramientas
-- **PostgREST** - API REST automatica para PostgreSQL
-- **Git** - Control de versiones
+- **CSS3** - Estilos y diseno responsivo (SPA de una sola pagina)
+- **JavaScript (ES6+)** - Logica del cliente, iconos Lucide (SVG)
 
 ## Estructura del Proyecto
 
 ```
 citas/
-├── backend/                    # API Backend
-│   ├── main.py                 # Punto de entrada de FastAPI
-│   ├── conexion.py             # Configuracion de conexion a BD
-│   ├── parametros.py           # Variables de configuracion
-│   ├── .env                    # Variables de entorno
-│   ├── models/
-│   │   └── schemas.py          # Modelos Pydantic
-│   └── routes/
-│       ├── citas.py            # Rutas para fichas/citas
-│       └── catalogos.py        # Rutas para catalogos
-├── frontend/                   # Frontend Web
-│   ├── index.html              # Pagina principal
+├── main.py                    # Punto de entrada de FastAPI (SPA + API)
+├── pyproject.toml             # Dependencias del proyecto
+├── .env                       # Variables de entorno (NO versionar)
+├── configuracion/
+│   ├── conexion.py            # Pool asyncpg y dependencia get_conn
+│   └── parametros.py          # Configuracion via pydantic-settings
+├── entidades/                 # Modelos Pydantic (schemas de entrada/salida)
+│   ├── emergencia.py
+│   ├── empleado.py
+│   ├── especialidad.py
+│   ├── ficha.py
+│   ├── horario.py
+│   ├── persona.py
+│   ├── servicio.py
+│   └── turno.py
+├── modelos/                   # Logica de acceso a datos (SQL)
+│   ├── m_emergencia.py
+│   ├── m_empleado.py
+│   ├── m_especialidad.py
+│   ├── m_ficha.py
+│   ├── m_horario.py
+│   ├── m_persona.py
+│   ├── m_servicio.py
+│   └── m_turno.py
+├── rutas/                     # Endpoints de la API (APIRouter)
+│   ├── r_emergencia.py
+│   ├── r_empleado.py
+│   ├── r_especialidad.py
+│   ├── r_ficha.py
+│   ├── r_horario.py
+│   ├── r_persona.py
+│   ├── r_servicio.py
+│   └── r_turno.py
+├── frontend/                  # Frontend Web (SPA)
+│   ├── index.html             # Pagina principal (una sola pagina)
 │   ├── css/
-│   │   └── styles.css          # Estilos globales
-│   ├── js/
-│   │   ├── api.js              # Funciones API genericas
-│   │   └── citas.js            # Logica de gestion de citas
-│   └── pages/
-│       ├── horarios.html       # Gestion de horarios
-│       └── reportes.html       # Reportes
-├── database/                   # Base de datos
-│   ├── schema.sql              # Estructura de tablas
-│   └── seed.sql                # Datos iniciales
-├── config/                     # Configuracion
-│   └── postgrest.conf          # Configuracion de PostgREST
-├── docs/                       # Documentacion
-└── README.md                   # Este archivo
+│   │   └── main.css           # Estilos globales
+│   └── js/
+│       ├── api.js             # Funciones API genericas (fetch)
+│       ├── catalogos.js       # Logica de listas
+│       ├── citas.js           # Logica de gestion de citas
+│       ├── emergencias.js     # Logica de emergencias
+│       ├── reportes.js        # Logica de reportes
+│       └── ui.js              # Utilidades de UI (modales, toasts, etc.)
+├── database/
+│   └── schema.sql             # Estructura de tablas (dump bd_hospital)
+├── config/
+│   └── postgrest.conf         # Configuracion de PostgREST (opcional)
+└── README.md                  # Este archivo
 ```
 
 ## Prerequisitos
 
-- Python 3.9 o superior
-- PostgreSQL 14 o superior
+- Python 3.10 o superior
+- PostgreSQL
 - pip (gestor de paquetes de Python)
 - Git
 
@@ -93,26 +114,25 @@ CREATE DATABASE bd_hospital;
 
 # Ejecutar el esquema
 \i database/schema.sql
-
-# Ejecutar datos iniciales
-\i database/seed.sql
 ```
+
+> Nota: el `schema.sql` es el dump completo de `bd_hospital`. Los cambios de
+> base de datos de todos los modulos se gestionan en el repo compartido
+> `hospital-todo-sano` (scripts SQL de correccion por modulo, p. ej.
+> `citas_correcciones.sql`).
 
 ### 3. Configurar Backend
 
 ```bash
-# Navegar al directorio backend
-cd backend
-
-# Crear entorno virtual (opcional pero recomendado)
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate  # Windows
+# Crear entorno virtual
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Mac/Linux: source .venv/bin/activate
 
 # Instalar dependencias
-pip install fastapi uvicorn asyncpg pydantic-settings python-dotenv
+pip install -e .
 
-# Editar archivo .env con tus credenciales de BD
+# Editar el archivo .env con tus credenciales de BD
 # DB_NAME=bd_hospital
 # DB_USER=postgres
 # DB_PASS=tu_password
@@ -120,24 +140,14 @@ pip install fastapi uvicorn asyncpg pydantic-settings python-dotenv
 # DB_PORT=5432
 
 # Ejecutar el servidor
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 4. Configurar Frontend
 
-Abrir `frontend/index.html` en tu navegador o usar un servidor local:
-
-```bash
-# Opcion 1: Abrir directamente en el navegador
-# Windows: start frontend/index.html
-# Mac: open frontend/index.html
-# Linux: xdg-open frontend/index.html
-
-# Opcion 2: Usar servidor local (recomendado)
-cd frontend
-python -m http.server 8080
-# Abrir http://localhost:8080
-```
+El frontend es una SPA servida directamente por FastAPI en la raiz (`/`).
+No requiere servidor adicional: abrir `http://localhost:8000` en el navegador
+tras levantar el backend.
 
 ### 5. (Opcional) Configurar PostgREST
 
@@ -150,43 +160,75 @@ postgrest config/postgrest.conf
 
 ## API Endpoints
 
-### Citas
-- `GET /api/citas/fichas` - Listar fichas de citas
-- `GET /api/citas/fichas/{id}` - Obtener detalle de ficha
-- `POST /api/citas/fichas` - Crear nueva ficha
-- `PUT /api/citas/fichas/{id}/estado` - Cambiar estado de ficha
-- `GET /api/citas/horarios-disponibles/{id_especialidad}` - Horarios disponibles
+Todos los endpoints tienen prefijo `/`. La API expone CRUD para cada recurso.
 
-### Catalogos
-- `GET /api/catalogos/especialidades` - Listar especialidades
-- `GET /api/catalogos/personas` - Listar personas
-- `GET /api/catalogos/empleados` - Listar empleados
-- `GET /api/catalogos/medicos` - Listar medicos
-- `GET /api/catalogos/medicos/{id_especialidad}` - Medicos por especialidad
+### Personas
+- `GET /personas/` - Listar personas
+- `GET /personas/{ci}/asegurado` - Informacion de asegurado por CI
+- `GET /personas/{id}` - Obtener detalle de persona
+- `POST /personas/` - Crear persona
+- `PUT /personas/{id}` - Actualizar persona
+- `DELETE /personas/{id}` - Eliminar persona
 
-## Modelos de Datos Principales
+### Fichas (Citas)
+- `GET /fichas/` - Listar fichas de citas
+- `GET /fichas/{id}` - Obtener detalle de ficha
+- `POST /fichas/` - Crear nueva ficha (con validaciones de negocio)
+- `PUT /fichas/{id}` - Actualizar ficha (cambiar estado, observacion)
+- `DELETE /fichas/{id}` - Eliminar ficha
 
-### Ficha (Cita)
+### Empleados, Especialidades, Horarios, Servicios, Turnos, Emergencias
+ Cada recurso expone CRUD basico (`GET /`, `GET /{id}`, `POST /`, `PUT /{id}`, `DELETE /{id}`).
+
+- `/empleados/`
+- `/especialidades/` (+ `GET /especialidades/medicos` - medicos por especialidad)
+- `/horarios/`
+- `/servicios/`
+- `/turnos/`
+- `/emergencias/`
+
+### Otros
+- `GET /health` - Estado del servicio
+
+## Modelo de Datos Principal
+
+### Ficha {tc_ficha}
 - `id_ficha` - Identificador unico
 - `nro_ficha` - Numero consecutivo del dia
+- `id_persona` - Persona (paciente) registrada
 - `ci_paciente` - Cedula de identidad del paciente
-- `tipo_paciente` - A (Asegurado) o P (Particular)
+- `tipo_paciente` - `Asegurado`, `Asegurado vencido` o `Particular`
+- `id_asegurado` - CI del asegurado (si aplica)
 - `id_medico` - Medico asignado
 - `id_especialidad` - Especialidad medica
 - `id_horario` - Horario seleccionado
+- `id_servicio` - Servicio (opcional)
 - `fech_cita` - Fecha de la cita
 - `hora_cita` - Hora de la cita
-- `estado` - R (Registrada), C (Confirmada), A (Atendida), N (No asistio), X (Cancelada)
+- `estado` - `Registrada`, `Confirmada`, `Atendida`, `No asistio`, `Cancelada`
+- `observacion`, `usuario_reg`, `fech_reg`
 
 ## Estados de la Cita
 
 | Estado | Descripcion |
 |--------|-------------|
-| R | Registrada - Cita creada pendiente de confirmacion |
-| C | Confirmada - Paciente confirmo asistencia |
-| A | Atendida - Cita completada |
-| N | No asistio - Paciente no se presento |
-| X | Cancelada - Cita cancelada |
+| Registrada | Cita creada pendiente de confirmacion |
+| Confirmada | Paciente confirmo asistencia |
+| Atendida | Cita completada |
+| No asistio | Paciente no se presento |
+| Cancelada | Cita cancelada |
+
+## Reglas de Negocio (creacion de ficha)
+
+- La persona debe existir y tener nombre/apellido registrado.
+- El CI debe corresponder a la persona seleccionada.
+- Un medico no puede registrarse como paciente.
+- El medico debe atender la especialidad seleccionada.
+- El horario debe corresponder a la especialidad del medico.
+- La fecha debe coincidir con el dia del horario y la hora con su rango.
+- No se permite cita duplicada (mismo medico, fecha y hora no cancelada).
+- Se respeta el limite de cupos (`nro_fichas`) del horario por dia.
+- Si la poliza del asegurado esta vencida, se exige registrar como Particular.
 
 ## Contribuir
 

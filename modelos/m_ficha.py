@@ -98,32 +98,39 @@ async def create(conn: Connection, data: dict) -> dict:
     if ocupadas >= horario['nro_fichas']:
         raise ValueError(f"El medico ya alcanzo el limite de {horario['nro_fichas']} fichas para ese dia")
 
-    # 5) Calculamos el próximo nro_ficha para la fecha
-    nro_ficha = await conn.fetchval(
-        "SELECT COALESCE(MAX(nro_ficha), 0) + 1 FROM tc_ficha WHERE fech_cita = $1",
-        fech_cita
-    )
-    row = await conn.fetchrow(
-        """INSERT INTO tc_ficha (nro_ficha, id_persona, ci_paciente, tipo_paciente, id_asegurado,
-                              id_medico, id_especialidad, id_horario, id_servicio,
-                              fech_cita, hora_cita, estado, observacion, usuario_reg)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *""",
-        nro_ficha,
-        id_persona,
-        ci,
-        tipo_paciente,
-        id_asegurado,
-        data['id_medico'],
-        data['id_especialidad'],
-        data['id_horario'],
-        data.get('id_servicio'),
-        fech_cita,
-        hora_cita,
-        data.get('estado', 'Registrada'),
-        data.get('observacion', ''),
-        data.get('usuario_reg', '')
-    )
-    return dict(row)
+    # 5) Calculamos el próximo nro_ficha para la fecha.
+    #    Se serializa con un advisory lock por fecha para evitar que dos
+    #    peticiones simultáneas generen el mismo nro_ficha (concurrencia).
+    async with conn.transaction():
+        await conn.execute(
+            "SELECT pg_advisory_xact_lock(hashtext($1::text))",
+            f"ficha_nro::{fech_cita}"
+        )
+        nro_ficha = await conn.fetchval(
+            "SELECT COALESCE(MAX(nro_ficha), 0) + 1 FROM tc_ficha WHERE fech_cita = $1",
+            fech_cita
+        )
+        row = await conn.fetchrow(
+            """INSERT INTO tc_ficha (nro_ficha, id_persona, ci_paciente, tipo_paciente, id_asegurado,
+                                  id_medico, id_especialidad, id_horario, id_servicio,
+                                  fech_cita, hora_cita, estado, observacion, usuario_reg)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *""",
+            nro_ficha,
+            id_persona,
+            ci,
+            tipo_paciente,
+            id_asegurado,
+            data['id_medico'],
+            data['id_especialidad'],
+            data['id_horario'],
+            data.get('id_servicio'),
+            fech_cita,
+            hora_cita,
+            data.get('estado', 'Registrada'),
+            data.get('observacion', ''),
+            data.get('usuario_reg', '')
+        )
+        return dict(row)
 
 async def update(conn: Connection, id_ficha: int, data: dict) -> Optional[dict]:
     fields = []
