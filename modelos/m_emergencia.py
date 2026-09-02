@@ -7,8 +7,7 @@ SELECT a.id,
        a.paciente_id AS id_paciente,
        p.ci AS ci_paciente,
        p.nombre || ' ' || p.apellidos AS paciente,
-       CASE WHEN a2.ci IS NOT NULL AND a2.fech_fin IS NOT NULL AND a2.fech_fin < CURRENT_DATE THEN 'Asegurado vencido'
-            WHEN a2.ci IS NOT NULL THEN 'Asegurado'
+       CASE WHEN a2.id_asegurado IS NOT NULL THEN 'Asegurado'
             ELSE 'Particular' END AS tipo_seguro,
        a.medico_id AS id_medico,
        a.id_trazabilidad,
@@ -37,7 +36,9 @@ SELECT a.id,
   LEFT JOIN tp_personas mp ON mp.id_persona = m.id_persona
   LEFT JOIN tp_empleados e2 ON e2.id_empleado = t.enfermero_id
   LEFT JOIN tp_personas ep ON ep.id_persona = e2.id_persona
-  LEFT JOIN tp_asegurado a2 ON a2.ci = p.ci AND a2.estado = TRUE
+  LEFT JOIN tp_personas pp_aseg ON pp_aseg.ci = p.ci
+  LEFT JOIN tp_pacientes pac2 ON pac2.id_persona = pp_aseg.id_persona
+  LEFT JOIN tp_asegurado a2 ON a2.id_paciente = pac2.id_paciente AND a2.estado = TRUE
 """
 
 async def _conexion_por_id(conn: Connection, id_atencion: int) -> Optional[dict]:
@@ -101,10 +102,12 @@ async def create(conn: Connection, data: dict) -> dict:
         raise ValueError("El medico indicado no existe")
 
     reg = await conn.fetchrow(
-        "SELECT id_empleado FROM tp_empleados WHERE id_empleado = $1", data['id_enfermero']
+        "SELECT id_empleado FROM tp_empleados WHERE id_empleado = $1 "
+        "AND LOWER(tipo_empleado) IN ('enfermero', 'auxiliar')",
+        data['id_enfermero']
     )
     if not reg:
-        raise ValueError("El encargado que registra no existe")
+        raise ValueError("Solo enfermeros o auxiliares pueden registrar emergencias")
 
     fecha = data.get('fecha') or date.today()
     hora = data.get('hora')

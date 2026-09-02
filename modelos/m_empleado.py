@@ -19,6 +19,8 @@ async def get_by_id(conn: Connection, id_empleado: int) -> Optional[dict]:
     return dict(row) if row else None
 
 async def create(conn: Connection, data: dict) -> dict:
+    if not data.get('id_turno'):
+        raise ValueError("El turno es obligatorio")
     row = await conn.fetchrow(
         """INSERT INTO tp_empleados (id_persona, id_area, tipo_empleado, fecha_contratacion, fecha_terminacion, id_turno, sueldo_base, nmp, activo)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *""",

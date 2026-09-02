@@ -8,7 +8,6 @@ class FichaBase(BaseModel):
     id_persona: int
     ci_paciente: str
     tipo_paciente: str = "Particular"  # 'Asegurado' o 'Particular'
-    id_asegurado: Optional[str] = None
     id_medico: int
     id_especialidad: int
     id_horario: int

@@ -1,13 +1,12 @@
 from asyncpg import Connection
-from typing import List, Optional
-
 from datetime import date
+from typing import List, Optional
 
 def _normalizar_genero(genero):
     if genero is None:
-        return None
+        return 'O'
     g = str(genero).strip().upper()
-    return g if g in ('M', 'F', 'O') else genero
+    return g if g in ('M', 'F', 'O') else 'O'
 
 async def get_all(conn: Connection) -> List[dict]:
     rows = await conn.fetch("SELECT * FROM tp_personas ORDER BY id_persona")
@@ -18,6 +17,8 @@ async def get_by_id(conn: Connection, id_persona: int) -> Optional[dict]:
     return dict(row) if row else None
 
 async def create(conn: Connection, data: dict) -> dict:
+    if not data.get('fecha_nacimiento'):
+        raise ValueError("La fecha de nacimiento es obligatoria")
     row = await conn.fetchrow(
         """INSERT INTO tp_personas (ci, nombres, apellidos, fecha_nacimiento, genero, telefono, email, direccion, activo)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *""",
@@ -51,8 +52,15 @@ async def delete(conn: Connection, id_persona: int) -> bool:
 
 async def es_asegurado(conn: Connection, ci: str) -> dict:
     row = await conn.fetchrow(
-        "SELECT ci, id_aseguradora, nombre, paterno, materno, nro_poliza, fech_fin "
-        "FROM tp_asegurado WHERE ci = $1 AND estado = TRUE",
+        """SELECT pp.ci,
+                  pp.nombres || ' ' || pp.apellidos AS nombre,
+                  a.nombre_aseguradora,
+                  COALESCE(a.numero_poliza, a.nro_poliza) AS nro_poliza,
+                  a.fecha_fin
+           FROM tp_personas pp
+           JOIN tp_pacientes pc ON pc.id_persona = pp.id_persona
+           JOIN tp_asegurado a ON a.id_paciente = pc.id_paciente AND a.estado = TRUE
+           WHERE pp.ci = $1""",
         ci
     )
     if not row:
@@ -60,19 +68,20 @@ async def es_asegurado(conn: Connection, ci: str) -> dict:
             "ci": ci,
             "es_asegurado": False,
             "nombre": None,
-            "id_aseguradora": None,
+            "nombre_aseguradora": None,
             "nro_poliza": None,
             "fech_fin": None,
             "vencido": False,
         }
-    nombre_completo = f"{row['nombre']} {row['paterno']} {row['materno']}".strip()
-    vencido = row["fech_fin"] is not None and row["fech_fin"] < date.today()
+    fech_fin = row["fecha_fin"]
+    hoy = date.today()
+    vencido = bool(fech_fin and fech_fin < hoy)
     return {
         "ci": row["ci"],
         "es_asegurado": True,
-        "nombre": nombre_completo,
-        "id_aseguradora": row["id_aseguradora"],
+        "nombre": (row["nombre"] or "").strip(),
+        "nombre_aseguradora": row["nombre_aseguradora"],
         "nro_poliza": row["nro_poliza"],
-        "fech_fin": row["fech_fin"],
+        "fech_fin": fech_fin,
         "vencido": vencido,
     }

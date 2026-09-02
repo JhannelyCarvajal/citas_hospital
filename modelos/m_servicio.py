@@ -2,7 +2,7 @@ from asyncpg import Connection
 from typing import List, Optional
 
 async def get_all(conn: Connection) -> List[dict]:
-    rows = await conn.fetch("SELECT * FROM tc_servicios ORDER BY id_servicio")
+    rows = await conn.fetch("SELECT * FROM tc_servicios WHERE activo = TRUE ORDER BY id_servicio")
     return [dict(r) for r in rows]
 
 async def get_by_id(conn: Connection, id_servicio: int) -> Optional[dict]:

@@ -35,6 +35,11 @@ function empreoNombre(e) {
   return tipo ? `${n} (${tipo})` : n;
 }
 
+function emePuedeRegistrar(e) {
+  return (e.tipo_empleado || "").toLowerCase() === "enfermero" ||
+         (e.tipo_empleado || "").toLowerCase() === "auxiliar";
+}
+
 function emePersonaMedico(idPersona) {
   return (store.empleados || []).some(
     (e) => e.id_persona === idPersona && (e.tipo_empleado || "").toLowerCase() === "medico"
@@ -163,10 +168,11 @@ function abrirNuevaEmergencia() {
   document.getElementById("emePacVence").hidden = true;
 
   llenarSel("emeMedico", store.medList.map((e) => [e.id_empleado, empreoNombre(e)]), "Selecciona el médico");
+  const registradores = (store.empleados || []).filter(emePuedeRegistrar);
   llenarSel(
     "emeEnfermero",
-    store.empleados.map((e) => [e.id_empleado, empreoNombre(e)]),
-    "Selecciona quién registra"
+    registradores.map((e) => [e.id_empleado, empreoNombre(e)]),
+    registradores.length ? "Selecciona quién registra" : "No hay enfermeros o auxiliares"
   );
   llenarSel("emeTipo", EMER_TIPOS.map((t) => [t, t]), "");
   llenarSel("emePri", EMER_PRIORIDADES.map((p) => [p.key, p.label]), "Selecciona la prioridad");
@@ -268,6 +274,9 @@ async function guardarNuevaEmergencia() {
 
   if (!medico) return toast("Selecciona el médico", "error");
   if (!enfermero) return toast("Selecciona quién registra la emergencia", "error");
+  if (!(store.empleadoById[enfermero] || {}).tipo_empleado || !emePuedeRegistrar(store.empleadoById[enfermero])) {
+    return toast("Solo enfermeros o auxiliares pueden registrar emergencias", "error");
+  }
   if (!prioridad) return toast("Selecciona la prioridad", "error");
   if (!fecha) return toast("Indica la fecha", "error");
   if (!hora) return toast("Indica la hora", "error");
